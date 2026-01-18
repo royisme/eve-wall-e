@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Eva Copilot",
+  "version": "0.1.0",
+  "description": "Eva Copilot side panel extension.",
+  "permissions": ["sidePanel"],
+  "host_permissions": ["http://localhost:3033/*"],
+  "side_panel": {
+    "default_path": "index.html"
+  }
+}
