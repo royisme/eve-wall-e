@@ -1,0 +1,88 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "save": "保存",
+    "cancel": "取消",
+    "search": "搜索",
+    "connected": "已连接",
+    "offline": "离线"
+  },
+  "header": {
+    "title": "Eve"
+  },
+  "chat": {
+    "title": "与 Eve 对话",
+    "placeholder": "问 Eve 任何问题...",
+    "welcome": {
+      "title": "你好！我是 Eve",
+      "subtitle": "你的 AI 求职助手。问我任何关于工作、简历或面试的问题。"
+    },
+    "suggestions": {
+      "findJobs": "找 React 工作",
+      "analyzeJob": "分析这个职位",
+      "helpResume": "帮我改简历"
+    },
+    "prompt": {
+      "analyzeJob": "帮我分析这个职位：{{company}} 的 {{title}}",
+      "saveJob": "保存这个职位：{{company}} 的 {{title}}"
+    },
+    "toolCard": {
+      "processing": "正在处理 {{count}} 个工具...",
+      "processing_plural": "正在处理 {{count}} 个工具...",
+      "completed": "{{count}} 个工具已完成",
+      "completed_plural": "{{count}} 个工具已完成",
+      "error": "工具错误"
+    }
+  },
+  "jobs": {
+    "title": "职位",
+    "searchPlaceholder": "搜索职位...",
+    "noResults": "未找到职位",
+    "status": {
+      "all": "全部",
+      "inbox": "收件箱",
+      "applied": "已申请",
+      "interviewing": "面试中",
+      "offer": "已录用",
+      "rejected": "已拒绝"
+    },
+    "time": {
+      "today": "今天",
+      "yesterday": "昨天",
+      "daysAgo": "{{count}}天前"
+    }
+  },
+  "jobContext": {
+    "analyze": "分析",
+    "analyzing": "分析中..."
+  },
+  "settings": {
+    "title": "配置",
+    "description": "设置与 Eve 服务器的连接。",
+    "serverPort": "服务器端口",
+    "language": "语言",
+    "languages": {
+      "en": "English",
+      "zh": "中文"
+    },
+    "saveButton": "保存配置",
+    "devSaved": "开发模式：已保存（模拟）",
+    "saved": "配置已保存！"
+  },
+  "workspace": {
+    "title": "Eve 工作区",
+    "jdLabel": "职位描述",
+    "jdPlaceholder": "在此处粘贴职位描述...",
+    "resumeLabel": "定制简历 (Markdown)",
+    "resumePlaceholder": "# 我的简历\n\n- 经历 1...",
+    "generateButton": "自动定制简历",
+    "generating": "生成中...",
+    "tailorPrompt": "给定以下职位描述：\n\n{{jd}}\n\n以及这份简历：\n\n{{resume}}\n\n请根据职位描述定制简历。以 Markdown 格式返回优化后的简历。"
+  },
+  "tabs": {
+    "chat": "对话",
+    "jobs": "职位",
+    "resume": "简历"
+  }
+}
