@@ -159,5 +159,13 @@
     "gaps": "差距",
     "suggestions": "建议",
     "pdfNote": "注意：此功能使用该职位的最新定制版本。"
+  },
+  "offline": {
+    "youreOffline": "你当前离线。更改将在重新连接后同步。",
+    "pendingChanges_one": "{{count}} 个待处理更改",
+    "pendingChanges_other": "{{count}} 个待处理更改",
+    "reconnecting": "正在重新连接 Eve...",
+    "connected": "已连接到 Eve",
+    "dismiss": "关闭"
   }
 }
