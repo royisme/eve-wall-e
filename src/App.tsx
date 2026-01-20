@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { TabNavigation, type TabId } from "@/components/TabNavigation";
 import { Chat } from "@/components/Chat";
 import { JobsList } from "@/components/JobsList";
+import { ResumeLibrary } from "@/components/ResumeLibrary";
 import { Workspace } from "@/workspace/Workspace";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
@@ -39,10 +40,6 @@ function SidePanel() {
   };
 
   const handleTabChange = (tab: TabId) => {
-    if (tab === "resume") {
-      window.open(window.location.href.split("#")[0] + "#/workspace", "_blank");
-      return;
-    }
     setActiveTab(tab);
   };
 
@@ -69,6 +66,7 @@ function SidePanel() {
       <main className="flex-1 overflow-hidden relative z-0">
         {activeTab === "chat" && <Chat />}
         {activeTab === "jobs" && <JobsList />}
+        {activeTab === "resume" && <ResumeLibrary />}
       </main>
       <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
