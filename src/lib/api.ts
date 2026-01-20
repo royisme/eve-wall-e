@@ -1,5 +1,8 @@
 const DEFAULT_PORT = 3033;
 
+// Custom auth header for Eve API
+const AUTH_HEADER = "x-eve-token";
+
 type StorageResult = { serverPort?: string; authToken?: string };
 
 async function getAuthToken(): Promise<string | null> {
@@ -28,18 +31,26 @@ async function getBaseUrl(): Promise<string> {
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { [AUTH_HEADER]: token } : {}),
+  };
+
+  // Don't set Content-Type for FormData - let browser set it with boundary
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const mergedHeaders = {
+    ...headers,
     ...(options.headers as Record<string, string>),
   };
-  
-  const response = await fetch(url, { ...options, headers });
-  
+
+  const response = await fetch(url, { ...options, headers: mergedHeaders });
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Eve API error: ${response.status} - ${error}`);
   }
-  
+
   return response;
 }
 
@@ -141,6 +152,77 @@ export interface TailoredResume {
 }
 
 // ============================================
+// Analytics Types
+// ============================================
+
+export type AnalyticsPeriod = "week" | "month" | "all";
+
+export interface FunnelMetrics {
+  inbox: number;
+  applied: number;
+  interview: number;
+  offer: number;
+  conversionRates: {
+    applyRate: number;      // applied / inbox
+    interviewRate: number;  // interview / applied
+    offerRate: number;       // offer / interview
+  };
+}
+
+export interface SkillMatch {
+  skill: string;
+  matchCount: number;
+}
+
+export interface SkillGap {
+  skill: string;
+  mentionCount: number;
+  inResume: boolean;
+}
+
+export interface SkillInsights {
+  top: SkillMatch[];
+  gaps: SkillGap[];
+}
+
+// ============================================
+// PDF Types
+// ============================================
+
+export type PdfTemplate = "modern" | "classic" | "minimal";
+
+export interface PdfUploadResponse {
+  filename: string;
+  size: number;
+  url?: string;
+}
+
+// ============================================
+// Resume Status & Versions
+// ============================================
+
+export interface ResumeStatus {
+  parse_status: "success" | "partial" | "failed" | "parsing";
+  errors?: string[];
+}
+
+export interface ResumeVersionsResponse {
+  versions: TailoredResume[];
+}
+
+// ============================================
+// Manual Job Creation
+// ============================================
+
+export interface CreateJobRequest {
+  title: string;
+  company: string;
+  url: string;
+  location?: string;
+  source?: "linkedin" | "indeed" | "email" | "manual";
+}
+
+// ============================================
 // API Functions
 // ============================================
 
@@ -153,9 +235,9 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
   return res.json();
 }
 
-export async function getHealth(): Promise<HealthResponse> {
-  const baseUrl = await getBaseUrl();
-  const res = await fetch(`${baseUrl}/health`);
+export async function getHealth(baseUrl?: string): Promise<HealthResponse> {
+  const url = baseUrl || await getBaseUrl();
+  const res = await fetch(`${url}/health`);
   if (!res.ok) throw new Error(`Eve API error: ${res.status}`);
   return res.json();
 }
@@ -213,27 +295,100 @@ export async function starJob(id: number, starred: boolean): Promise<{ job: Job 
 export async function syncJobs(onProgress?: (synced: number, total: number) => void): Promise<{ synced: number; newJobs: number }> {
   const baseUrl = await getBaseUrl();
   const token = await getAuthToken();
-  
+
   return new Promise((resolve, reject) => {
-    const eventSource = new EventSource(`${baseUrl}/jobs/sync?token=${token}`);
-    
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.status === 'processing' && data.synced !== undefined && data.total !== undefined) {
-        if (onProgress) onProgress(data.synced, data.total);
-      } else if (data.status === 'complete') {
-        eventSource.close();
-        resolve({ synced: data.synced || 0, newJobs: data.newJobs || 0 });
-      } else if (data.status === 'error') {
-        eventSource.close();
-        reject(new Error(data.message || "Sync failed"));
-      }
-    };
-    
-    eventSource.onerror = () => {
-      eventSource.close();
-      reject(new Error("Sync connection failed"));
-    };
+    const controller = new AbortController();
+    let syncedSeen = 0;
+    let newJobsSeen = 0;
+
+    fetch(`${baseUrl}/jobs/sync`, {
+      method: "GET",
+      headers: {
+        ...(token ? { [AUTH_HEADER]: token } : {}),
+      },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          controller.abort();
+          throw new Error(`Sync failed: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          controller.abort();
+          throw new Error("No response body");
+        }
+
+        let buffer = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              // Handle EOF - process any remaining buffer
+              if (buffer.trim()) {
+                const lines = buffer.split("\n");
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    try {
+                      const data = JSON.parse(line.slice(6));
+                      if (data.synced !== undefined) syncedSeen = data.synced;
+                      if (data.newJobs !== undefined) newJobsSeen = data.newJobs;
+                      if (data.total !== undefined && onProgress) {
+                        onProgress(syncedSeen, data.total);
+                      }
+                    } catch (error) {
+                      console.warn("Failed to parse trailing SSE message:", error);
+                    }
+                  }
+                }
+              }
+              // No explicit complete/error received, resolve with last seen values
+              controller.abort();
+              resolve({ synced: syncedSeen, newJobs: newJobsSeen });
+              return;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+
+                  if (data.status === "processing" && data.synced !== undefined && data.total !== undefined) {
+                    syncedSeen = data.synced;
+                    if (onProgress) onProgress(data.synced, data.total);
+                  } else if (data.status === "complete") {
+                    controller.abort();
+                    resolve({ synced: data.synced || syncedSeen, newJobs: data.newJobs || newJobsSeen });
+                    return;
+                  } else if (data.status === "error") {
+                    controller.abort();
+                    reject(new Error(data.message || "Sync failed"));
+                    return;
+                  }
+                } catch (error) {
+                  console.warn("Failed to parse SSE message:", error);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          controller.abort();
+          throw error;
+        }
+      })
+      .catch((error) => {
+        controller.abort();
+        reject(new Error(`Sync connection failed: ${error.message}`));
+      });
   });
 }
 
@@ -349,15 +504,84 @@ export async function getJobPrescore(jobId: number, resumeId: number): Promise<{
   const baseUrl = await getBaseUrl();
   const query = new URLSearchParams();
   query.set("resumeId", String(resumeId));
-  
+
   const res = await fetchWithAuth(`${baseUrl}/jobs/${jobId}/prescore?${query}`);
   return res.json();
 }
 
+// ============================================
+// Resume Status & Versions
+// ============================================
+
+export async function getResumeStatus(id: number): Promise<ResumeStatus> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/status`);
+  return res.json();
+}
+
+export async function getResumeVersions(id: number): Promise<ResumeVersionsResponse> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/versions`);
+  return res.json();
+}
+
+// ============================================
+// PDF Upload (frontend-generated)
+// ============================================
+
+export async function uploadTailoredPdf(
+  tailoredResumeId: number,
+  file: Blob,
+  filename: string
+): Promise<PdfUploadResponse> {
+  const baseUrl = await getBaseUrl();
+  const form = new FormData();
+  form.append("file", file, filename);
+  const res = await fetchWithAuth(`${baseUrl}/resumes/tailored/${tailoredResumeId}/pdf`, {
+    method: "POST",
+    body: form,
+  });
+  return res.json();
+}
+
+// ============================================
+// Analytics
+// ============================================
+
+export async function getFunnelMetrics(
+  period: AnalyticsPeriod = "all"
+): Promise<FunnelMetrics> {
+  const baseUrl = await getBaseUrl();
+  const query = period ? `?period=${period}` : "";
+  const res = await fetchWithAuth(`${baseUrl}/analytics/funnel${query}`);
+  return res.json();
+}
+
+export async function getSkillInsights(): Promise<SkillInsights> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/analytics/skills`);
+  return res.json();
+}
+
+// ============================================
+// Manual Job Creation
+// ============================================
+
+export async function createJob(data: CreateJobRequest): Promise<{ job: Job }> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/jobs`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
 export const eveApi = {
+  // Chat & Health
   chat,
   getHealth,
   getAgentStatus,
+  // Jobs
   getJobs,
   getJobStats,
   getJobDetail,
@@ -367,15 +591,24 @@ export const eveApi = {
   updateJob,
   starJob,
   syncJobs,
+  createJob,
+  // Resumes
   getResumes,
   createResume,
   getResume,
+  getResumeStatus,
+  getResumeVersions,
   updateResume,
   deleteResume,
   setDefaultResume,
+  // Tailor
   tailorResume,
   getTailoredVersions,
   updateTailoredResume,
+  uploadTailoredPdf,
+  // Analytics
+  getFunnelMetrics,
+  getSkillInsights,
 };
 
 export default eveApi;

@@ -39,13 +39,15 @@
     "title": "职位",
     "searchPlaceholder": "搜索职位...",
     "noResults": "未找到职位",
+    "viewAnalytics": "查看分析",
     "status": {
       "all": "全部",
       "inbox": "收件箱",
       "applied": "已申请",
       "interviewing": "面试中",
       "offer": "已录用",
-      "rejected": "已拒绝"
+      "rejected": "已拒绝",
+      "skipped": "已跳过"
     },
     "time": {
       "today": "今天",
@@ -58,17 +60,36 @@
     "analyzing": "分析中..."
   },
   "settings": {
-    "title": "配置",
-    "description": "设置与 Eve 服务器的连接。",
+    "title": "设置",
+    "description": "配置 Wall-E 扩展",
     "serverPort": "服务器端口",
     "language": "语言",
+    "languageDesc": "选择你的首选语言",
     "languages": {
       "en": "English",
       "zh": "中文"
     },
     "saveButton": "保存配置",
     "devSaved": "开发模式：已保存（模拟）",
-    "saved": "配置已保存！"
+    "saved": "设置已保存！",
+    "connection": "连接",
+    "connectionDesc": "Eve 服务器连接设置",
+    "testConnection": "测试",
+    "connected": "已连接",
+    "connectionFailed": "连接失败",
+    "dataManagement": "数据管理",
+    "dataManagementDesc": "管理本地缓存和同步",
+    "pendingActions": "{{count}} 个待处理操作",
+    "forceSync": "强制同步",
+    "clearCache": "清除缓存",
+    "confirmClearCache": "确定要清除所有缓存数据吗？此操作无法撤销。",
+    "cacheCleared": "缓存已清除",
+    "syncComplete": "同步完成",
+    "about": "关于",
+    "appName": "应用名称",
+    "version": "版本",
+    "documentation": "文档",
+    "reportIssue": "报告问题"
   },
   "workspace": {
     "title": "Eve 工作区",
@@ -84,5 +105,86 @@
     "chat": "对话",
     "jobs": "职位",
     "resume": "简历"
+  },
+  "analytics": {
+    "title": "求职分析",
+    "subtitle": "跟踪您的求职进度和洞察",
+    "period": {
+      "week": "本周",
+      "month": "本月",
+      "all": "全部"
+    },
+    "funnel": "求职漏斗",
+    "conversionRates": "转化率",
+    "topSkills": "热门技能",
+    "skillGaps": "待提升技能",
+    "matches": "次匹配",
+    "mentions": "次提及",
+    "noData": "暂无技能数据",
+    "labels": {
+      "inbox": "收件箱",
+      "applied": "已申请",
+      "interview": "面试",
+      "offers": "录用"
+    },
+    "conversions": {
+      "inboxToApplied": "收件箱 → 已申请",
+      "appliedToInterview": "已申请 → 面试",
+      "interviewToOffer": "面试 → 录用"
+    }
+  },
+  "gapAnalysis": {
+    "title": "差距分析",
+    "noAnalysis": "运行分析以查看技能差距和建议",
+    "match": "匹配度",
+    "overallScore": "总体匹配度",
+    "strengths": "优势",
+    "gaps": "差距",
+    "suggestions": "建议"
+  },
+  "pdf": {
+    "buildTitle": "生成 PDF",
+    "buildDescription": "生成专业的 PDF 简历",
+    "templates": {
+      "modern": "现代",
+      "classic": "经典",
+      "minimal": "简约"
+    },
+    "generating": "生成中...",
+    "download": "下载",
+    "ready": "就绪"
+  },
+  "resume": {
+    "characters": "字符",
+    "unsavedChanges": "未保存的更改"
+  },
+  "jobDetail": {
+    "buildPdf": "生成 PDF 简历",
+    "back": "返回",
+    "viewOriginal": "查看原始职位",
+    "resume": "简历",
+    "status": "状态",
+    "matchAnalysis": "匹配分析",
+    "analyzing": "正在用 LLM 分析职位匹配度...",
+    "refresh": "刷新",
+    "analyze": "分析",
+    "clickAnalyze": "点击「分析」获取 AI 驱动的职位匹配分析",
+    "tailoring": "正在定制简历...",
+    "tailorResume": "为该职位定制简历",
+    "tailoredSuccess": "简历定制成功！请查看工作区标签。",
+    "selectResume": "选择简历",
+    "jobDescription": "职位描述",
+    "strengths": "优势",
+    "gaps": "差距",
+    "suggestions": "建议",
+    "pdfNote": "注意：此功能使用该职位的最新定制版本。"
+  },
+  "offline": {
+    "youreOffline": "你当前离线。更改将在重新连接后同步。",
+    "pendingChanges_one": "{{count}} 个待处理更改",
+    "pendingChanges_other": "{{count}} 个待处理更改",
+    "reconnecting": "正在重新连接 Eve...",
+    "connected": "已连接到 Eve",
+    "dismiss": "关闭"
   }
 }

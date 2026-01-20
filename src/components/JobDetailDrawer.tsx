@@ -4,13 +4,12 @@ import { useTranslation } from "react-i18next";
 import {
   X,
   Star,
-  Trash2,
   ExternalLink,
   Loader2,
   AlertCircle,
   CheckCircle,
   Zap,
-  RefreshCw,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { eveApi, type JobStatus, type Job } from "@/lib/api";
+import { PdfBuilder } from "@/components/PdfBuilder";
 
 interface JobDetailDrawerProps {
   jobId: number;
@@ -42,6 +42,8 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedResumeId, setSelectedResumeId] = useState<number | null>(null);
+  const [showPdfBuilder, setShowPdfBuilder] = useState(false);
+  const [tailoredResumeContent, setTailoredResumeContent] = useState<string>("");
   const statusConfig = getStatusConfig(t);
 
   const { data: resumesData } = useQuery({
@@ -90,7 +92,8 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
       if (!effectiveResumeId) throw new Error("No resume selected");
       return eveApi.tailorResume(jobId, effectiveResumeId, forceNew);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setTailoredResumeContent(data.content || "");
       queryClient.invalidateQueries({ queryKey: ["job-detail", jobId] });
     },
   });
@@ -112,7 +115,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
       <div className="p-4 border-b border-border/40 flex items-center justify-between bg-background/80 backdrop-blur-md sticky top-0 z-10">
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4 mr-2" />
-          Back
+          {t('jobDetail.back')}
         </Button>
         <div className="flex gap-2">
           <Button
@@ -140,7 +143,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
               onClick={() => window.open(job.url, "_blank")}
             >
               <ExternalLink className="h-3 w-3 mr-1" />
-              View original posting
+              {t('jobDetail.viewOriginal')}
             </Button>
           )}
         </div>
@@ -148,13 +151,13 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
         <Card>
           <CardContent className="p-3 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase">Resume</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase">{t('jobDetail.resume')}</span>
               <Select
                 value={String(effectiveResumeId || "")}
                 onValueChange={(val) => setSelectedResumeId(Number(val))}
               >
                 <SelectTrigger className="h-8 w-[200px]">
-                  <SelectValue placeholder="Select resume" />
+                  <SelectValue placeholder={t('jobDetail.selectResume')} />
                 </SelectTrigger>
                 <SelectContent>
                   {resumesData?.resumes.map((resume) => (
@@ -167,7 +170,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase">Status</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase">{t('jobDetail.status')}</span>
               <Select
                 value={job.status}
                 onValueChange={(val) => updateStatusMutation.mutate(val as JobStatus)}
@@ -192,7 +195,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
             <CardContent className="p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground uppercase">
-                  Match Analysis
+                  {t('jobDetail.matchAnalysis')}
                 </span>
                 <Button
                   variant="ghost"
@@ -206,14 +209,14 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                   ) : (
                     <Zap className="h-3 w-3 mr-1" />
                   )}
-                  {analysis ? "Refresh" : "Analyze"}
+                  {analysis ? t('jobDetail.refresh') : t('jobDetail.analyze')}
                 </Button>
               </div>
 
               {analyzeMutation.isPending && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Analyzing job fit with LLM...
+                  {t('jobDetail.analyzing')}
                 </div>
               )}
 
@@ -234,7 +237,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1 text-xs font-medium text-green-600">
                         <CheckCircle className="h-3 w-3" />
-                        Strengths
+                        {t('jobDetail.strengths')}
                       </div>
                       <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
                         {analysis.strengths.map((s, i) => (
@@ -250,7 +253,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1 text-xs font-medium text-yellow-600">
                         <AlertCircle className="h-3 w-3" />
-                        Gaps
+                        {t('jobDetail.gaps')}
                       </div>
                       <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
                         {analysis.gaps.map((g, i) => (
@@ -266,7 +269,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1 text-xs font-medium text-primary">
                         <Zap className="h-3 w-3" />
-                        Suggestions
+                        {t('jobDetail.suggestions')}
                       </div>
                       <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
                         {analysis.suggestions.map((s, i) => (
@@ -282,7 +285,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
 
               {!analysis && !analyzeMutation.isPending && (
                 <div className="text-xs text-muted-foreground text-center py-4">
-                  Click "Analyze" to get AI-powered job fit analysis
+                  {t('jobDetail.clickAnalyze')}
                 </div>
               )}
             </CardContent>
@@ -291,7 +294,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
 
         {effectiveResumeId && analysis && (
           <Card>
-            <CardContent className="p-3">
+            <CardContent className="p-3 space-y-2">
               <Button
                 className="w-full"
                 disabled={tailorMutation.isPending}
@@ -300,29 +303,60 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                 {tailorMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Tailoring Resume...
+                    {t('jobDetail.tailoring')}
                   </>
                 ) : (
                   <>
                     <Zap className="h-4 w-4 mr-2" />
-                    Tailor Resume for This Job
+                    {t('jobDetail.tailorResume')}
                   </>
                 )}
               </Button>
+              {tailorMutation.isSuccess && tailoredResumeContent && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowPdfBuilder(true)}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {t('jobDetail.buildPdf')}
+                </Button>
+              )}
               {tailorMutation.isSuccess && (
                 <div className="mt-2 text-xs text-green-600 text-center">
-                  ✓ Resume tailored successfully! Check the Workspace tab.
+                  ✓ {t('jobDetail.tailoredSuccess')}
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
+        {showPdfBuilder && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="w-full max-w-lg bg-background rounded-2xl p-4 shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">{t('pdf.buildTitle')}</h3>
+                <Button variant="ghost" size="icon" onClick={() => setShowPdfBuilder(false)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <PdfBuilder
+                markdown={tailoredResumeContent}
+                filename={`${job.title}-${job.company}`}
+                onComplete={() => setShowPdfBuilder(false)}
+              />
+              <p className="mt-4 text-[10px] text-muted-foreground text-center">
+                {t('jobDetail.pdfNote')}
+              </p>
+            </div>
+          </div>
+        )}
+
         {job.jdMarkdown && (
           <Card>
             <CardContent className="p-3 space-y-2">
               <span className="text-xs font-medium text-muted-foreground uppercase">
-                Job Description
+                {t('jobDetail.jobDescription')}
               </span>
               <div className="prose prose-sm max-w-none text-xs">
                 <pre className="whitespace-pre-wrap font-sans text-xs">{job.jdMarkdown}</pre>

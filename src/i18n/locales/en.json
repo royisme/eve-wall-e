@@ -39,13 +39,15 @@
     "title": "Jobs",
     "searchPlaceholder": "Search jobs...",
     "noResults": "No jobs found",
+    "viewAnalytics": "View Analytics",
     "status": {
       "all": "All",
       "inbox": "Inbox",
       "applied": "Applied",
       "interviewing": "Interviewing",
       "offer": "Offer",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "skipped": "Skipped"
     },
     "time": {
       "today": "Today",
@@ -58,17 +60,36 @@
     "analyzing": "Analyzing..."
   },
   "settings": {
-    "title": "Configuration",
-    "description": "Set up connection to Eve server.",
+    "title": "Settings",
+    "description": "Configure your Wall-E extension",
     "serverPort": "Server Port",
     "language": "Language",
+    "languageDesc": "Choose your preferred language",
     "languages": {
       "en": "English",
       "zh": "中文"
     },
     "saveButton": "Save Configuration",
     "devSaved": "Dev mode: saved (mock)",
-    "saved": "Configuration saved!"
+    "saved": "Settings saved!",
+    "connection": "Connection",
+    "connectionDesc": "Eve server connection settings",
+    "testConnection": "Test",
+    "connected": "Connected",
+    "connectionFailed": "Connection failed",
+    "dataManagement": "Data Management",
+    "dataManagementDesc": "Manage local cache and sync",
+    "pendingActions": "{{count}} pending actions",
+    "forceSync": "Force Sync",
+    "clearCache": "Clear Cache",
+    "confirmClearCache": "Are you sure you want to clear all cached data? This action cannot be undone.",
+    "cacheCleared": "Cache cleared successfully",
+    "syncComplete": "Sync completed",
+    "about": "About",
+    "appName": "App Name",
+    "version": "Version",
+    "documentation": "Documentation",
+    "reportIssue": "Report Issue"
   },
   "workspace": {
     "title": "Eve Workspace",
@@ -84,5 +105,86 @@
     "chat": "Chat",
     "jobs": "Jobs",
     "resume": "Resume"
+  },
+  "analytics": {
+    "title": "Application Analytics",
+    "subtitle": "Track your job search progress and insights",
+    "period": {
+      "week": "This Week",
+      "month": "This Month",
+      "all": "All Time"
+    },
+    "funnel": "Application Funnel",
+    "conversionRates": "Conversion Rates",
+    "topSkills": "Top Performing Skills",
+    "skillGaps": "Skills to Address",
+    "matches": "matches",
+    "mentions": "mentions",
+    "noData": "No skill data available yet",
+    "labels": {
+      "inbox": "Inbox",
+      "applied": "Applied",
+      "interview": "Interview",
+      "offers": "Offers"
+    },
+    "conversions": {
+      "inboxToApplied": "Inbox → Applied",
+      "appliedToInterview": "Applied → Interview",
+      "interviewToOffer": "Interview → Offer"
+    }
+  },
+  "gapAnalysis": {
+    "title": "Gap Analysis",
+    "noAnalysis": "Run an analysis to see skill gaps and suggestions",
+    "match": "Match",
+    "overallScore": "Overall Match",
+    "strengths": "Strengths",
+    "gaps": "Gaps",
+    "suggestions": "Suggestions"
+  },
+  "pdf": {
+    "buildTitle": "Build PDF",
+    "buildDescription": "Generate a professional PDF resume",
+    "templates": {
+      "modern": "Modern",
+      "classic": "Classic",
+      "minimal": "Minimal"
+    },
+    "generating": "Generating...",
+    "download": "Download",
+    "ready": "Ready"
+  },
+  "resume": {
+    "characters": "characters",
+    "unsavedChanges": "Unsaved changes"
+  },
+  "jobDetail": {
+    "buildPdf": "Build PDF Resume",
+    "back": "Back",
+    "viewOriginal": "View original posting",
+    "resume": "Resume",
+    "status": "Status",
+    "matchAnalysis": "Match Analysis",
+    "analyzing": "Analyzing job fit with LLM...",
+    "refresh": "Refresh",
+    "analyze": "Analyze",
+    "clickAnalyze": "Click \"Analyze\" to get AI-powered job fit analysis",
+    "tailoring": "Tailoring Resume...",
+    "tailorResume": "Tailor Resume for This Job",
+    "tailoredSuccess": "Resume tailored successfully! Check the Workspace tab.",
+    "selectResume": "Select resume",
+    "jobDescription": "Job Description",
+    "strengths": "Strengths",
+    "gaps": "Gaps",
+    "suggestions": "Suggestions",
+    "pdfNote": "Note: This uses the latest tailored version for this job."
+  },
+  "offline": {
+    "youreOffline": "You're offline. Changes will sync when reconnected.",
+    "pendingChanges_one": "{{count}} pending change",
+    "pendingChanges_other": "{{count}} pending changes",
+    "reconnecting": "Reconnecting to Eve...",
+    "connected": "Connected to Eve",
+    "dismiss": "Dismiss"
   }
 }
