@@ -58,7 +58,7 @@ This document outlines the design for implementing comprehensive job-hunting fea
 | UI Architecture | **Client-Driven React** | Not SDUI; Wall-E owns UI logic, Eve provides REST API |
 | Resume Capability | **Separate from Jobs** | Cleaner separation of concerns, reusable |
 | Match Analysis | **On-demand by default** | Auto-analyze only starred/applied jobs to control LLM cost |
-| PDF Generation | **Backend (Playwright)** | Full control, template support, caching |
+| PDF Generation | **Frontend (Browser)** | Browser has native rendering; no server resources; immediate download |
 | Real-time Updates | **SSE for sync, Polling for analytics** | Balance of simplicity and responsiveness |
 | Offline Mode | **Read-only cache + queued actions** | Jobs/resumes viewable offline, sync when online |
 
@@ -87,10 +87,8 @@ This document outlines the design for implementing comprehensive job-hunting fea
 
 1. ~~**No Resume Capability**: Eve lacks tools for resume CRUD operations~~ ✅ **DONE**
 2. ~~**No REST API for Jobs**: Only agent tools, no direct HTTP endpoints~~ ✅ **DONE**
-3. **No PDF Generation**: Neither Eve nor Wall-E can generate PDFs
-4. ~~**No Auth Handshake**: Wall-E → Eve communication is unauthenticated~~ ✅ **DONE**
-5. **No Analysis Caching**: LLM analysis is re-computed every time
-6. **No Job Deduplication**: Same job from multiple sources creates duplicates
+  4. **No PDF Generation**: Neither Eve nor Wall-E can generate PDFs (Eve stores Markdown; Wall-E generates PDF in browser)
+  5. ~~**No Analysis Caching**: LLM analysis is re-computed every time~~ ✅ **DONE**
 
 ---
 
@@ -311,8 +309,9 @@ PDF Upload → Parse Attempt →
 **Features**:
 1. **AI Inline Suggestions**: Eve highlights recommended edits in the editor
 2. **Gap Analysis Panel**: Shows skill gaps between JD and resume
-3. **Build PDF**: One-click PDF generation (via Playwright backend)
+3. **Build PDF**: One-click PDF generation (browser-based, markdown to PDF via library or print)
 4. **Version History**: Multiple versions per job with `is_latest` flag
+5. **PDF Upload (Optional)**: Upload generated PDF to Eve for archival/sharing
 
 ### 4.4 Analytics (Embedded in Jobs Tab Header + Modal)
 
@@ -493,16 +492,11 @@ PUT /tailor/:id
   Body: { content: string }
   Response: { tailoredResume: TailoredResume }
 
-// Generate PDF from markdown
-POST /tailor/pdf
-  Body: { 
-    markdown: string, 
-    template?: "modern" | "classic" | "minimal"
-  }
-  Response: { 
-    pdf: string,        // base64 encoded
-    filename: string 
-  }
+// Upload PDF (frontend-generated) to Eve for archival
+POST /resumes/tailored/:id/pdf
+  Body: multipart/form-data with "file" field
+  Response: { filename: string, size: number, url?: string }
+  Notes: PDF is optional; Eve stores Markdown as source of truth
 
 // ============================================
 // Analytics API
@@ -992,11 +986,32 @@ export async function updateTailoredResume(id: number, content: string): Promise
   return res.json();
 }
 
-export async function generatePdf(markdown: string, template?: string): Promise<{ pdf: string; filename: string }> {
+export async function generatePdf(markdown: string, template?: string): Promise<Blob> {
+  // Frontend PDF generation - browser-based using libraries or window.print
+  // Example using html-to-pdf library:
+  const html = renderPdfHtml(markdown, template);
+  return await htmlToPdfBlob(html);
+}
+
+export async function downloadPdf(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export async function uploadPdf(tailoredResumeId: number, blob: Blob, filename: string): Promise<{ success: boolean }> {
+  // Optional: upload generated PDF to Eve for archival
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/tailor/pdf`, {
+  const form = new FormData();
+  form.append("file", blob, filename);
+  const res = await fetchWithAuth(`${baseUrl}/resumes/tailored/${tailoredResumeId}/pdf`, {
     method: "POST",
-    body: JSON.stringify({ markdown, template }),
+    body: form,
   });
   return res.json();
 }
@@ -1165,14 +1180,15 @@ export default eveApi;
 
 | Task | Description | Effort | Status |
 |------|-------------|--------|--------|
-| PDF generation | Playwright backend with templates | 8h | |
-| PDF caching | Cache per tailored version | 2h | |
+| Frontend PDF generation | Browser-based PDF from Markdown (libraries or print) | 6h | |
+| PDF download | Client-side blob download | 2h | |
+| PDF upload API | Optional upload to Eve for archival | 2h | |
 | Resume library polish | Parse status, usage stats | 3h | |
 | Analytics funnel | Status history queries | 4h | |
 | Analytics skills | Skill extraction and matching | 4h | |
 | Analytics UI | Modal with charts | 5h | |
 
-**Deliverable**: Complete feature set with PDF and analytics
+**Deliverable**: Complete feature set with frontend PDF and analytics
 
 **Effort**: ~26h (with 30% buffer: ~34h)
 

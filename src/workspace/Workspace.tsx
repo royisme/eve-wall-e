@@ -20,9 +20,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { eveApi, type TailoredResume } from "@/lib/api";
+import { eveApi, type TailoredResume, type JobAnalysis } from "@/lib/api";
 import { MilkdownEditor } from "@/components/MilkdownEditor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PdfBuilder } from "@/components/PdfBuilder";
+import { GapAnalysisPanel } from "@/components/GapAnalysisPanel";
 
 export function Workspace() {
   const { t } = useTranslation();
@@ -191,6 +193,11 @@ export function Workspace() {
                {job?.jdMarkdown || "No description available."}
              </div>
           </div>
+          {jobData?.analysis && (
+            <div className="p-4 border-t border-border/40 overflow-y-auto max-h-[40%]">
+              <GapAnalysisPanel analysis={jobData.analysis} matchScore={jobData.analysis.overallScore} />
+            </div>
+          )}
         </div>
         
         {/* Right: Resume Editor */}
@@ -222,7 +229,7 @@ export function Workspace() {
           )}
 
           <div className="flex-1 overflow-hidden">
-            <ErrorBoundary 
+            <ErrorBoundary
               fallback={
                 <Textarea
                   className="flex-1 h-full font-mono text-sm resize-none border-0 focus-visible:ring-0 p-6 leading-relaxed bg-transparent selection:bg-primary/20 scrollbar-thin rounded-none"
@@ -239,6 +246,14 @@ export function Workspace() {
                 onChange={handleContentChange}
               />
             </ErrorBoundary>
+          </div>
+
+          <div className="p-4 border-t border-border/40 bg-muted/5">
+            <PdfBuilder
+              markdown={content}
+              filename={`${job?.title}-${job?.company}`}
+              tailoredResumeId={currentVersion?.id}
+            />
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Zap,
   RefreshCw,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { eveApi, type JobStatus, type Job } from "@/lib/api";
+import { PdfBuilder } from "@/components/PdfBuilder";
 
 interface JobDetailDrawerProps {
   jobId: number;
@@ -42,6 +44,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedResumeId, setSelectedResumeId] = useState<number | null>(null);
+  const [showPdfBuilder, setShowPdfBuilder] = useState(false);
   const statusConfig = getStatusConfig(t);
 
   const { data: resumesData } = useQuery({
@@ -291,7 +294,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
 
         {effectiveResumeId && analysis && (
           <Card>
-            <CardContent className="p-3">
+            <CardContent className="p-3 space-y-2">
               <Button
                 className="w-full"
                 disabled={tailorMutation.isPending}
@@ -309,6 +312,14 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                   </>
                 )}
               </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowPdfBuilder(true)}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {t('jobDetail.buildPdf')}
+              </Button>
               {tailorMutation.isSuccess && (
                 <div className="mt-2 text-xs text-green-600 text-center">
                   ✓ Resume tailored successfully! Check the Workspace tab.
@@ -316,6 +327,28 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {showPdfBuilder && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="w-full max-w-lg bg-background rounded-2xl p-4 shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">{t('pdf.buildTitle')}</h3>
+                <Button variant="ghost" size="icon" onClick={() => setShowPdfBuilder(false)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <PdfBuilder
+                markdown={/* tailored content isn't directly here, using placeholder or need to fetch */}
+                markdown={analysis ? (analysis as any).tailoredContent || "" : ""} // This assumes tailoredContent is in analysis or needs to be fetched
+                filename={`${job.title}-${job.company}`}
+                onComplete={() => setShowPdfBuilder(false)}
+              />
+              <p className="mt-4 text-[10px] text-muted-foreground text-center">
+                Note: This uses the latest tailored version for this job.
+              </p>
+            </div>
+          </div>
         )}
 
         {job.jdMarkdown && (

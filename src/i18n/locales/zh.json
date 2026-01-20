@@ -84,5 +84,60 @@
     "chat": "对话",
     "jobs": "职位",
     "resume": "简历"
+  },
+  "analytics": {
+    "title": "求职分析",
+    "subtitle": "跟踪您的求职进度和洞察",
+    "period": {
+      "week": "本周",
+      "month": "本月",
+      "all": "全部"
+    },
+    "funnel": "求职漏斗",
+    "conversionRates": "转化率",
+    "topSkills": "热门技能",
+    "skillGaps": "待提升技能",
+    "matches": "次匹配",
+    "mentions": "次提及"
+  },
+  "gapAnalysis": {
+    "title": "差距分析",
+    "noAnalysis": "运行分析以查看技能差距和建议",
+    "match": "匹配度",
+    "overallScore": "总体匹配度",
+    "strengths": "优势",
+    "gaps": "差距",
+    "suggestions": "建议"
+  },
+  "pdf": {
+    "buildTitle": "生成 PDF",
+    "buildDescription": "生成专业的 PDF 简历",
+    "templates": {
+      "modern": "现代",
+      "classic": "经典",
+      "minimal": "简约"
+    },
+    "generating": "生成中...",
+    "download": "下载",
+    "ready": "就绪"
+  },
+  "resume": {
+    "characters": "字符",
+    "unsavedChanges": "未保存的更改"
+  },
+  "jobs": {
+    "viewAnalytics": "查看分析",
+    "status": {
+      "all": "全部",
+      "inbox": "收件箱",
+      "applied": "已申请",
+      "interviewing": "面试中",
+      "offer": "已录用",
+      "rejected": "已拒绝",
+      "skipped": "已跳过"
+    }
+  },
+  "jobDetail": {
+    "buildPdf": "生成 PDF 简历"
   }
 }

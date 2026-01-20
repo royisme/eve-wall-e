@@ -141,6 +141,77 @@ export interface TailoredResume {
 }
 
 // ============================================
+// Analytics Types
+// ============================================
+
+export type AnalyticsPeriod = "week" | "month" | "all";
+
+export interface FunnelMetrics {
+  inbox: number;
+  applied: number;
+  interview: number;
+  offer: number;
+  conversionRates: {
+    applyRate: number;      // applied / inbox
+    interviewRate: number;  // interview / applied
+    offerRate: number;       // offer / interview
+  };
+}
+
+export interface SkillMatch {
+  skill: string;
+  matchCount: number;
+}
+
+export interface SkillGap {
+  skill: string;
+  mentionCount: number;
+  inResume: boolean;
+}
+
+export interface SkillInsights {
+  top: SkillMatch[];
+  gaps: SkillGap[];
+}
+
+// ============================================
+// PDF Types
+// ============================================
+
+export type PdfTemplate = "modern" | "classic" | "minimal";
+
+export interface PdfUploadResponse {
+  filename: string;
+  size: number;
+  url?: string;
+}
+
+// ============================================
+// Resume Status & Versions
+// ============================================
+
+export interface ResumeStatus {
+  parse_status: "success" | "partial" | "failed" | "parsing";
+  errors?: string[];
+}
+
+export interface ResumeVersionsResponse {
+  versions: TailoredResume[];
+}
+
+// ============================================
+// Manual Job Creation
+// ============================================
+
+export interface CreateJobRequest {
+  title: string;
+  company: string;
+  url: string;
+  location?: string;
+  source?: "linkedin" | "indeed" | "email" | "manual";
+}
+
+// ============================================
 // API Functions
 // ============================================
 
@@ -349,15 +420,84 @@ export async function getJobPrescore(jobId: number, resumeId: number): Promise<{
   const baseUrl = await getBaseUrl();
   const query = new URLSearchParams();
   query.set("resumeId", String(resumeId));
-  
+
   const res = await fetchWithAuth(`${baseUrl}/jobs/${jobId}/prescore?${query}`);
   return res.json();
 }
 
+// ============================================
+// Resume Status & Versions
+// ============================================
+
+export async function getResumeStatus(id: number): Promise<ResumeStatus> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/status`);
+  return res.json();
+}
+
+export async function getResumeVersions(id: number): Promise<ResumeVersionsResponse> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/versions`);
+  return res.json();
+}
+
+// ============================================
+// PDF Upload (frontend-generated)
+// ============================================
+
+export async function uploadTailoredPdf(
+  tailoredResumeId: number,
+  file: Blob,
+  filename: string
+): Promise<PdfUploadResponse> {
+  const baseUrl = await getBaseUrl();
+  const form = new FormData();
+  form.append("file", file, filename);
+  const res = await fetchWithAuth(`${baseUrl}/resumes/tailored/${tailoredResumeId}/pdf`, {
+    method: "POST",
+    body: form,
+  });
+  return res.json();
+}
+
+// ============================================
+// Analytics
+// ============================================
+
+export async function getFunnelMetrics(
+  period: AnalyticsPeriod = "all"
+): Promise<FunnelMetrics> {
+  const baseUrl = await getBaseUrl();
+  const query = period ? `?period=${period}` : "";
+  const res = await fetchWithAuth(`${baseUrl}/analytics/funnel${query}`);
+  return res.json();
+}
+
+export async function getSkillInsights(): Promise<SkillInsights> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/analytics/skills`);
+  return res.json();
+}
+
+// ============================================
+// Manual Job Creation
+// ============================================
+
+export async function createJob(data: CreateJobRequest): Promise<{ job: Job }> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/jobs`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
 export const eveApi = {
+  // Chat & Health
   chat,
   getHealth,
   getAgentStatus,
+  // Jobs
   getJobs,
   getJobStats,
   getJobDetail,
@@ -367,15 +507,24 @@ export const eveApi = {
   updateJob,
   starJob,
   syncJobs,
+  createJob,
+  // Resumes
   getResumes,
   createResume,
   getResume,
+  getResumeStatus,
+  getResumeVersions,
   updateResume,
   deleteResume,
   setDefaultResume,
+  // Tailor
   tailorResume,
   getTailoredVersions,
   updateTailoredResume,
+  uploadTailoredPdf,
+  // Analytics
+  getFunnelMetrics,
+  getSkillInsights,
 };
 
 export default eveApi;

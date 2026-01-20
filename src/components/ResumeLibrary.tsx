@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { eveApi, type Resume } from "@/lib/api";
+import { ResumeEditorModal } from "@/components/ResumeEditorModal";
 
 export function ResumeLibrary() {
   const { t } = useTranslation();
@@ -33,6 +34,7 @@ export function ResumeLibrary() {
   const [importMode, setImportingMode] = useState<'markdown' | 'pdf' | null>(null);
   const [newName, setNewName] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [editingResume, setEditingResume] = useState<Resume | null>(null);
 
   const { data: resumesData, isLoading } = useQuery({
     queryKey: ["resumes"],
@@ -264,7 +266,7 @@ export function ResumeLibrary() {
                           Set as Default
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem className="text-xs py-2 rounded-lg">
+                      <DropdownMenuItem className="text-xs py-2 rounded-lg" onClick={() => setEditingResume(resume)}>
                         <FileCode className="h-3.5 w-3.5 mr-2" />
                         Edit Content
                       </DropdownMenuItem>
@@ -304,6 +306,13 @@ export function ResumeLibrary() {
           ))
         )}
       </div>
+      {editingResume && (
+        <ResumeEditorModal
+          open={!!editingResume}
+          resume={editingResume}
+          onClose={() => setEditingResume(null)}
+        />
+      )}
     </div>
   );
 }

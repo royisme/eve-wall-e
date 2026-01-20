@@ -3,11 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ExternalLink, Building2, MapPin, Clock, Briefcase, Zap, RefreshCw, Star } from "lucide-react";
+import { Search, ExternalLink, Building2, MapPin, Clock, Briefcase, Zap, RefreshCw, Star, BarChart3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { eveApi, type Job, type JobStatus } from "@/lib/api";
 import { JobDetailDrawer } from "@/components/JobDetailDrawer";
+import { AnalyticsModal } from "@/components/AnalyticsModal";
 
 const getStatusConfig = (t: any) => ({
   inbox: { label: t('jobs.status.inbox'), variant: "secondary" as const, className: "bg-muted text-muted-foreground border-border" },
@@ -24,9 +25,10 @@ export function JobsList() {
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
-  const [syncStatus, setSyncStatus] = useState<{ syncing: boolean; message: string }>({ 
-    syncing: false, 
-    message: "" 
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{ syncing: boolean; message: string }>({
+    syncing: false,
+    message: ""
   });
   
   const statusConfig = getStatusConfig(t);
@@ -106,14 +108,23 @@ export function JobsList() {
               className="pl-9 bg-muted/40 border-transparent focus:border-primary/30 focus:bg-background transition-all duration-300 rounded-xl"
             />
           </div>
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             disabled={syncStatus.syncing}
             className="rounded-xl shrink-0 h-10 w-10"
             onClick={handleSync}
           >
             <RefreshCw className={`h-4 w-4 ${syncStatus.syncing ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-xl shrink-0 h-10 w-10"
+            onClick={() => setShowAnalytics(true)}
+            title={t('jobs.viewAnalytics')}
+          >
+            <BarChart3 className="h-4 w-4" />
           </Button>
         </div>
 
@@ -278,6 +289,7 @@ export function JobsList() {
           ))
         )}
       </div>
+      <AnalyticsModal open={showAnalytics} onClose={() => setShowAnalytics(false)} />
     </div>
   );
 }

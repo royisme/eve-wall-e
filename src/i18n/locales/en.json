@@ -84,5 +84,60 @@
     "chat": "Chat",
     "jobs": "Jobs",
     "resume": "Resume"
+  },
+  "analytics": {
+    "title": "Application Analytics",
+    "subtitle": "Track your job search progress and insights",
+    "period": {
+      "week": "This Week",
+      "month": "This Month",
+      "all": "All Time"
+    },
+    "funnel": "Application Funnel",
+    "conversionRates": "Conversion Rates",
+    "topSkills": "Top Performing Skills",
+    "skillGaps": "Skills to Address",
+    "matches": "matches",
+    "mentions": "mentions"
+  },
+  "gapAnalysis": {
+    "title": "Gap Analysis",
+    "noAnalysis": "Run an analysis to see skill gaps and suggestions",
+    "match": "Match",
+    "overallScore": "Overall Match",
+    "strengths": "Strengths",
+    "gaps": "Gaps",
+    "suggestions": "Suggestions"
+  },
+  "pdf": {
+    "buildTitle": "Build PDF",
+    "buildDescription": "Generate a professional PDF resume",
+    "templates": {
+      "modern": "Modern",
+      "classic": "Classic",
+      "minimal": "Minimal"
+    },
+    "generating": "Generating...",
+    "download": "Download",
+    "ready": "Ready"
+  },
+  "resume": {
+    "characters": "characters",
+    "unsavedChanges": "Unsaved changes"
+  },
+  "jobs": {
+    "viewAnalytics": "View Analytics",
+    "status": {
+      "all": "All",
+      "inbox": "Inbox",
+      "applied": "Applied",
+      "interviewing": "Interviewing",
+      "offer": "Offer",
+      "rejected": "Rejected",
+      "skipped": "Skipped"
+    }
+  },
+  "jobDetail": {
+    "buildPdf": "Build PDF Resume"
   }
 }
