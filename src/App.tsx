@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { Settings } from "@/components/Settings";
 import { Header } from "@/components/Header";
 import { TabNavigation, type TabId } from "@/components/TabNavigation";
@@ -10,11 +10,26 @@ import { ResumeLibrary } from "@/components/ResumeLibrary";
 import { Workspace } from "@/workspace/Workspace";
 import { Toaster } from "@/components/ui/toaster";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { setToastCallback } from "@/lib/toast";
+import { handleApiError } from "@/lib/errors";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
-const queryClient = new QueryClient();
+// Configure QueryClient with error handling and retry logic
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      staleTime: 30000,
+    },
+    mutations: {
+      retry: 1,
+      onError: (error) => handleApiError(error),
+    },
+  },
+});
 
 function SidePanel() {
   const { t } = useTranslation();
@@ -49,7 +64,7 @@ function SidePanel() {
   // Setup toast callback for sync service
   useEffect(() => {
     setToastCallback((type: "success" | "error" | "info", message: string) => {
-      window.dispatchEvent(new CustomEvent("wall-e-toast", { detail: { type, message } }));
+      window.dispatchEvent(new CustomEvent("wall-e-toast", { detail: { type, message, id: Date.now().toString(), timestamp: Date.now() } }));
     });
   }, []);
 
@@ -85,15 +100,53 @@ function SidePanel() {
   );
 }
 
+// Wrapper component that connects ErrorBoundary with React Query reset
+function AppErrorBoundary({ children }: { children: React.ReactNode }) {
+  const { reset } = useQueryErrorResetBoundary();
+
+  return (
+    <ErrorBoundary
+      onReset={() => {
+        // Clear query cache on error recovery
+        queryClient.clear();
+        reset();
+      }}
+      onError={(error, errorInfo) => {
+        console.error("[App Error]", error, errorInfo);
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+// Workspace with its own error boundary
+function WorkspaceWithErrorBoundary() {
+  const { reset } = useQueryErrorResetBoundary();
+
+  return (
+    <ErrorBoundary
+      onReset={() => {
+        reset();
+      }}
+    >
+      <Workspace />
+    </ErrorBoundary>
+  );
+}
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <HashRouter>
-        <Routes>
-          <Route path="/" element={<SidePanel />} />
-          <Route path="/workspace" element={<Workspace />} />
-        </Routes>
-      </HashRouter>
+      <AppErrorBoundary>
+        <HashRouter>
+          <Routes>
+            <Route path="/" element={<SidePanel />} />
+            <Route path="/workspace" element={<WorkspaceWithErrorBoundary />} />
+          </Routes>
+        </HashRouter>
+        <Toaster />
+      </AppErrorBoundary>
     </QueryClientProvider>
   );
 }
