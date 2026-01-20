@@ -26,7 +26,7 @@ export function useConnectionStatus() {
         try {
           const { serverPort } = await new Promise<{ serverPort?: string }>((resolve) => {
             if (typeof chrome !== "undefined" && chrome.storage) {
-              chrome.storage.local.get(["serverPort"], resolve);
+              chrome.storage.local.get(["serverPort"], (result) => resolve(result as { serverPort?: string }));
             } else {
               resolve({ serverPort: "3033" });
             }

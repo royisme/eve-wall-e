@@ -1,9 +1,10 @@
-import { queueAction, getAllActions, updateActionStatus, incrementRetryCount, removeAction, clearActionQueue } from "./actionQueue";
-import { getAllJobs, saveJobs } from "@/lib/db";
+import { getAllActions, updateActionStatus, incrementRetryCount, removeAction, saveJobs } from "@/lib/db";
 import { eveApi } from "@/lib/api";
-import type { QueuedAction, SyncProgressCallback } from "./types";
+import type { JobStatus } from "@/lib/api";
+import type { ActionRecord } from "@/lib/db/schema";
+import type { SyncProgressCallback } from "./types";
 
-const SYNC_INTERVAL = 60000; // 1 minute
+const SYNC_INTERVAL = 60000;
 const MAX_RETRIES = 3;
 
 export class SyncService {
@@ -24,21 +25,19 @@ export class SyncService {
     let synced = 0;
 
     for (const action of actions) {
-      if (action.status !== "pending") continue;
+      if (action.status !== "pending" || action.id === undefined) continue;
 
       try {
-        await this.executeAction(action);
+        await this.executeAction(action as ActionRecord & { id: number });
         synced++;
         await removeAction(action.id);
       } catch (error) {
         console.error(`[Sync] Action ${action.id} failed:`, error);
 
         if (action.retryCount >= MAX_RETRIES) {
-          // Max retries reached, remove and log
           console.error(`[Sync] Action ${action.id} failed after ${MAX_RETRIES} retries, removing`);
           await removeAction(action.id);
         } else {
-          // Increment retry count
           await incrementRetryCount(action.id);
         }
       }
@@ -48,47 +47,34 @@ export class SyncService {
     return { success: true, synced };
   }
 
-  private async executeAction(action: QueuedAction): Promise<void> {
-    // Update status to syncing
+  private async executeAction(action: ActionRecord & { id: number }): Promise<void> {
     await updateActionStatus(action.id, "syncing");
 
     try {
       switch (action.type) {
-        case "CREATE_JOB":
-          // Fetch latest jobs from server and save
+        case "createJob":
           await this.syncJobsFromServer();
           break;
 
-        case "UPDATE_JOB":
-          // Push update to server
+        case "updateJob":
           await this.pushJobUpdate(action.payload);
           break;
 
-        case "DELETE_JOB":
-          // Skip job (status change on server)
+        case "deleteJob":
           await this.pushJobDelete(action.payload);
           break;
 
-        case "UPDATE_RESUME":
-          // Resume updates are sync-only, just mark as synced
-          // TODO: Implement if needed
-          break;
-
-        case "UPDATE_TAILORED":
-          // Tailored resume sync-only
-          // TODO: Implement if needed
+        case "updateResume":
+        case "tailorResume":
           break;
 
         default:
-          throw new Error(`Unknown action type: ${(action as any).type}`);
+          throw new Error(`Unknown action type: ${(action as ActionRecord).type}`);
       }
 
-      // Mark as completed
-      await updateActionStatus(action.id, "pending"); // Reset to pending for potential re-queue
+      await removeAction(action.id);
     } catch (error) {
-      // Mark as failed with retry count
       await updateActionStatus(action.id, "failed");
-      await incrementRetryCount(action.id);
       throw error;
     }
   }
@@ -100,14 +86,13 @@ export class SyncService {
   }
 
   private async pushJobUpdate(payload: unknown): Promise<void> {
-    // Parse jobId from payload
-    const jobId = (payload as any)?.id;
+    const jobId = (payload as { id?: number })?.id;
     if (!jobId) throw new Error("Invalid job update payload");
-    await eveApi.updateJob(jobId, payload as any);
+    await eveApi.updateJob(jobId, payload as { status?: JobStatus; starred?: boolean });
   }
 
   private async pushJobDelete(payload: unknown): Promise<void> {
-    const jobId = (payload as any)?.id;
+    const jobId = (payload as { id?: number })?.id;
     if (!jobId) throw new Error("Invalid job delete payload");
     await eveApi.updateJob(jobId, { status: "skipped" });
   }
@@ -122,16 +107,15 @@ export class SyncService {
       }
     }, SYNC_INTERVAL);
 
-    // Store interval ID for cleanup (not exported for now)
-    (this as any).syncIntervalId = intervalId;
+    (this as { syncIntervalId?: ReturnType<typeof setInterval> }).syncIntervalId = intervalId;
   }
 
   public stopAutoSync(): void {
-    if ((this as any).syncIntervalId) {
-      clearInterval((this as any).syncIntervalId);
+    const self = this as { syncIntervalId?: ReturnType<typeof setInterval> };
+    if (self.syncIntervalId) {
+      clearInterval(self.syncIntervalId);
     }
   }
 }
 
-// Singleton instance
 export const syncService = new SyncService();

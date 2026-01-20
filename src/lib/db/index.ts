@@ -1,46 +1,19 @@
-import { initDB, type WallEDB } from "./schema";
+import { initDB } from "./schema";
 import type { JobRecord, ResumeRecord, TailoredResumeRecord, ActionRecord } from "./schema";
 
-// Generic type for store names
-type StoreName = "jobs" | "resumes" | "tailoredResumes" | "actionQueue";
-
-// Generic CRUD operations
-async function getAll<T>(storeName: StoreName): Promise<T[]> {
-  const db = await initDB();
-  return db.getAll(storeName);
-}
-
-async function get<T>(storeName: StoreName, id: number): Promise<T | undefined> {
-  const db = await initDB();
-  return db.get(storeName, id);
-}
-
-async function put<T>(storeName: StoreName, data: T): Promise<void> {
-  const db = await initDB();
-  await db.put(storeName, data);
-}
-
-async function deleteRecord(storeName: StoreName, id: number): Promise<void> {
-  const db = await initDB();
-  await db.delete(storeName, id);
-}
-
-async function clear(storeName: StoreName): Promise<void> {
-  const db = await initDB();
-  await db.clear(storeName);
-}
-
-// Job-specific operations
 export async function getAllJobs(): Promise<JobRecord[]> {
-  return getAll<JobRecord>("jobs");
+  const db = await initDB();
+  return db.getAll("jobs");
 }
 
 export async function getJob(id: number): Promise<JobRecord | undefined> {
-  return get<JobRecord>("jobs", id);
+  const db = await initDB();
+  return db.get("jobs", id);
 }
 
 export async function saveJob(job: JobRecord): Promise<void> {
-  await put("jobs", { ...job, syncedAt: new Date().toISOString() });
+  const db = await initDB();
+  await db.put("jobs", { ...job, syncedAt: new Date().toISOString() });
 }
 
 export async function saveJobs(jobs: JobRecord[]): Promise<void> {
@@ -58,17 +31,19 @@ export async function getJobsByStatus(status: string): Promise<JobRecord[]> {
   return index.getAll(status);
 }
 
-// Resume-specific operations
 export async function getAllResumes(): Promise<ResumeRecord[]> {
-  return getAll<ResumeRecord>("resumes");
+  const db = await initDB();
+  return db.getAll("resumes");
 }
 
 export async function getResume(id: number): Promise<ResumeRecord | undefined> {
-  return get<ResumeRecord>("resumes", id);
+  const db = await initDB();
+  return db.get("resumes", id);
 }
 
 export async function saveResume(resume: ResumeRecord): Promise<void> {
-  await put("resumes", { ...resume, syncedAt: new Date().toISOString() });
+  const db = await initDB();
+  await db.put("resumes", { ...resume, syncedAt: new Date().toISOString() });
 }
 
 export async function saveResumes(resumes: ResumeRecord[]): Promise<void> {
@@ -84,12 +59,12 @@ export async function updateResume(id: number, data: Partial<ResumeRecord>): Pro
   const db = await initDB();
   const existing = await db.get("resumes", id);
   if (!existing) throw new Error(`Resume ${id} not found`);
-  await put("resumes", { ...existing, ...data, updatedAt: new Date().toISOString() });
+  await db.put("resumes", { ...existing, ...data, updatedAt: new Date().toISOString() });
 }
 
-// Tailored Resume operations
 export async function getAllTailoredResumes(): Promise<TailoredResumeRecord[]> {
-  return getAll<TailoredResumeRecord>("tailoredResumes");
+  const db = await initDB();
+  return db.getAll("tailoredResumes");
 }
 
 export async function getTailoredResumesByJobId(jobId: number): Promise<TailoredResumeRecord[]> {
@@ -99,38 +74,37 @@ export async function getTailoredResumesByJobId(jobId: number): Promise<Tailored
 }
 
 export async function getLatestTailoredResume(jobId: number): Promise<TailoredResumeRecord | undefined> {
-  const db = await initDB();
   const all = await getTailoredResumesByJobId(jobId);
-  // Return the one with highest version or newest flag
-  return all.reduce((latest, current) => {
+  if (all.length === 0) return undefined;
+  return all.reduce((latest: TailoredResumeRecord, current: TailoredResumeRecord) => {
     if (current.isNew) return current;
-    if (!latest || current.version > latest.version) return current;
+    if (current.version > latest.version) return current;
     return latest;
-  }, undefined);
+  }, all[0]);
 }
 
 export async function saveTailoredResume(resume: TailoredResumeRecord): Promise<void> {
-  await put("tailoredResumes", { ...resume, syncedAt: new Date().toISOString() });
+  const db = await initDB();
+  await db.put("tailoredResumes", { ...resume, syncedAt: new Date().toISOString() });
 }
 
-// Action Queue operations
 export async function getAllActions(): Promise<ActionRecord[]> {
-  return getAll<ActionRecord>("actionQueue");
+  const db = await initDB();
+  return db.getAll("actionQueue");
 }
 
 export async function queueAction(
   type: ActionRecord["type"],
   payload: unknown
-): Promise<ActionRecord> {
+): Promise<number> {
   const db = await initDB();
-  const id = await db.add("actionQueue", {
+  return db.add("actionQueue", {
     type,
     payload,
     createdAt: Date.now(),
-    status: "pending" as ActionRecord["status"],
+    status: "pending" as const,
     retryCount: 0,
   });
-  return id;
 }
 
 export async function updateActionStatus(
@@ -140,25 +114,26 @@ export async function updateActionStatus(
   const db = await initDB();
   const existing = await db.get("actionQueue", id);
   if (!existing) throw new Error(`Action ${id} not found`);
-  await put("actionQueue", { ...existing, status });
+  await db.put("actionQueue", { ...existing, status });
 }
 
 export async function incrementRetryCount(id: number): Promise<void> {
   const db = await initDB();
   const existing = await db.get("actionQueue", id);
   if (!existing) throw new Error(`Action ${id} not found`);
-  await put("actionQueue", { ...existing, retryCount: existing.retryCount + 1 });
+  await db.put("actionQueue", { ...existing, retryCount: existing.retryCount + 1 });
 }
 
 export async function removeAction(id: number): Promise<void> {
-  await deleteRecord("actionQueue", id);
+  const db = await initDB();
+  await db.delete("actionQueue", id);
 }
 
 export async function clearActionQueue(): Promise<void> {
-  await clear("actionQueue");
+  const db = await initDB();
+  await db.clear("actionQueue");
 }
 
-// Utility: Clear all data
 export async function clearAll(): Promise<void> {
   const db = await initDB();
   const tx = db.transaction(["jobs", "resumes", "tailoredResumes", "actionQueue"], "readwrite");

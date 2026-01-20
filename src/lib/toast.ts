@@ -1,11 +1,11 @@
-import { Toast, Toaster } from "@/components/ui/toaster";
-import type { ToastType } from "@/components/ui/toast";
 import type { SyncResult } from "@/lib/sync/types";
 
-// Toast state management - imperative API that works from non-React code
-let toastCallback: ((toast: ToastType, message: string) => void) | null = null;
+type ToastType = "success" | "error" | "info";
 
-export function setToastCallback(callback: ((toast: ToastType, message: string) => void) | null) {
+// Toast state management - imperative API that works from non-React code
+let toastCallback: ((type: ToastType, message: string) => void) | null = null;
+
+export function setToastCallback(callback: ((type: ToastType, message: string) => void) | null) {
   toastCallback = callback;
 }
 
@@ -13,9 +13,9 @@ export function toast(type: ToastType, message: string): void {
   if (toastCallback) {
     toastCallback(type, message);
   } else {
-    // Fallback: dispatch event
+    // Fallback: dispatch event with unique id
     window.dispatchEvent(new CustomEvent("wall-e-toast", {
-      detail: { type, message },
+      detail: { id: crypto.randomUUID(), type, message, timestamp: Date.now() },
     }));
   }
 }
@@ -37,6 +37,6 @@ export function toastSyncResult(result: SyncResult): void {
   if (result.error) {
     toastError(result.error);
   } else {
-    toastInfo(`${t("sync.success", { count: result.synced })}`);
+    toastInfo(`Synced ${result.synced} items`);
   }
 }

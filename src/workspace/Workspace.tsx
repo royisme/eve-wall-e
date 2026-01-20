@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  Loader2, 
-  Wand2, 
-  FileText, 
-  Briefcase, 
-  Save, 
+import {
+  Loader2,
+  Wand2,
+  FileText,
+  Briefcase,
+  Save,
   ChevronLeft,
   History,
   AlertCircle,
@@ -25,6 +25,9 @@ import { MilkdownEditor } from "@/components/MilkdownEditor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PdfBuilder } from "@/components/PdfBuilder";
 import { GapAnalysisPanel } from "@/components/GapAnalysisPanel";
+import { Toaster } from "@/components/ui/toaster";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { setToastCallback } from "@/lib/toast";
 
 export function Workspace() {
   const { t } = useTranslation();

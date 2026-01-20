@@ -1,4 +1,4 @@
-import { openDB, type DBSchema } from "idb";
+import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 
 export interface WallEDB extends DBSchema {
   jobs: {
@@ -64,7 +64,7 @@ export interface TailoredResumeRecord {
 }
 
 export interface ActionRecord {
-  id: number;
+  id?: number;
   type: "updateJob" | "createJob" | "tailorResume" | "deleteJob" | "updateResume";
   payload: unknown;
   createdAt: number;
@@ -75,22 +75,26 @@ export interface ActionRecord {
 const DB_NAME = "wall-e-db";
 const DB_VERSION = 1;
 
-export async function initDB(): Promise<WallEDB> {
+export async function initDB(): Promise<IDBPDatabase<WallEDB>> {
   return openDB<WallEDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
-      // Jobs store
-      const jobsStore = db.createObjectStore("jobs", { keyPath: "id" });
-      jobsStore.createIndex("by-status", "status");
+      if (!db.objectStoreNames.contains("jobs")) {
+        const jobsStore = db.createObjectStore("jobs", { keyPath: "id" });
+        jobsStore.createIndex("by-status", "status");
+      }
 
-      // Resumes store
-      const resumesStore = db.createObjectStore("resumes", { keyPath: "id" });
+      if (!db.objectStoreNames.contains("resumes")) {
+        db.createObjectStore("resumes", { keyPath: "id" });
+      }
 
-      // Tailored resumes store
-      const tailoredStore = db.createObjectStore("tailoredResumes", { keyPath: "id" });
-      tailoredStore.createIndex("by-job", "jobId");
+      if (!db.objectStoreNames.contains("tailoredResumes")) {
+        const tailoredStore = db.createObjectStore("tailoredResumes", { keyPath: "id" });
+        tailoredStore.createIndex("by-job", "jobId");
+      }
 
-      // Action queue store
-      db.createObjectStore("actionQueue", { keyPath: "id", autoIncrement: true });
+      if (!db.objectStoreNames.contains("actionQueue")) {
+        db.createObjectStore("actionQueue", { keyPath: "id", autoIncrement: true });
+      }
     },
   });
 }

@@ -167,7 +167,8 @@
     "reconnecting": "Reconnecting to Eve...",
     "connected": "Connected to Eve",
     "dismiss": "Dismiss"
-  }
+  },
+  "jobDetail": {
     "buildPdf": "Build PDF Resume",
     "back": "Back",
     "viewOriginal": "View original posting",

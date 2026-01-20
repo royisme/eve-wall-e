@@ -8,6 +8,9 @@ import { Chat } from "@/components/Chat";
 import { JobsList } from "@/components/JobsList";
 import { ResumeLibrary } from "@/components/ResumeLibrary";
 import { Workspace } from "@/workspace/Workspace";
+import { Toaster } from "@/components/ui/toaster";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { setToastCallback } from "@/lib/toast";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
@@ -43,6 +46,13 @@ function SidePanel() {
     setActiveTab(tab);
   };
 
+  // Setup toast callback for sync service
+  useEffect(() => {
+    setToastCallback((type: "success" | "error" | "info", message: string) => {
+      window.dispatchEvent(new CustomEvent("wall-e-toast", { detail: { type, message } }));
+    });
+  }, []);
+
   if (hasConfig === null) {
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
@@ -69,6 +79,8 @@ function SidePanel() {
         {activeTab === "resume" && <ResumeLibrary />}
       </main>
       <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <Toaster />
+      <OfflineBanner />
     </div>
   );
 }
