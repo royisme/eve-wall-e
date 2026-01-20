@@ -25,9 +25,7 @@ import { MilkdownEditor } from "@/components/MilkdownEditor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PdfBuilder } from "@/components/PdfBuilder";
 import { GapAnalysisPanel } from "@/components/GapAnalysisPanel";
-import { Toaster } from "@/components/ui/toaster";
 import { OfflineBanner } from "@/components/OfflineBanner";
-import { setToastCallback } from "@/lib/toast";
 
 export function Workspace() {
   const { t } = useTranslation();
@@ -129,6 +127,7 @@ export function Workspace() {
 
   return (
     <div className="h-dvh w-full flex flex-col bg-background/95 backdrop-blur-sm">
+      <OfflineBanner />
       {/* Header */}
       <header className="h-14 border-b border-border/40 flex items-center px-4 justify-between bg-background/80 backdrop-blur-md z-10 sticky top-0">
         <div className="flex items-center gap-4">
