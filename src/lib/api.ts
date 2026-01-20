@@ -1,5 +1,8 @@
 const DEFAULT_PORT = 3033;
 
+// Custom auth header for Eve API
+const AUTH_HEADER = "x-eve-token";
+
 type StorageResult = { serverPort?: string; authToken?: string };
 
 async function getAuthToken(): Promise<string | null> {
@@ -28,7 +31,7 @@ async function getBaseUrl(): Promise<string> {
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
   const headers: Record<string, string> = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { [AUTH_HEADER]: token } : {}),
   };
 
   // Don't set Content-Type for FormData - let browser set it with boundary
@@ -292,27 +295,64 @@ export async function starJob(id: number, starred: boolean): Promise<{ job: Job 
 export async function syncJobs(onProgress?: (synced: number, total: number) => void): Promise<{ synced: number; newJobs: number }> {
   const baseUrl = await getBaseUrl();
   const token = await getAuthToken();
-  
+
   return new Promise((resolve, reject) => {
-    const eventSource = new EventSource(`${baseUrl}/jobs/sync?token=${token}`);
-    
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.status === 'processing' && data.synced !== undefined && data.total !== undefined) {
-        if (onProgress) onProgress(data.synced, data.total);
-      } else if (data.status === 'complete') {
-        eventSource.close();
-        resolve({ synced: data.synced || 0, newJobs: data.newJobs || 0 });
-      } else if (data.status === 'error') {
-        eventSource.close();
-        reject(new Error(data.message || "Sync failed"));
-      }
-    };
-    
-    eventSource.onerror = () => {
-      eventSource.close();
-      reject(new Error("Sync connection failed"));
-    };
+    const controller = new AbortController();
+
+    fetch(`${baseUrl}/jobs/sync`, {
+      method: "GET",
+      headers: {
+        ...(token ? { [AUTH_HEADER]: token } : {}),
+      },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Sync failed: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error("No response body");
+        }
+
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.status === "processing" && data.synced !== undefined && data.total !== undefined) {
+                  if (onProgress) onProgress(data.synced, data.total);
+                } else if (data.status === "complete") {
+                  resolve({ synced: data.synced || 0, newJobs: data.newJobs || 0 });
+                  return;
+                } else if (data.status === "error") {
+                  reject(new Error(data.message || "Sync failed"));
+                  return;
+                }
+              } catch (error) {
+                console.warn("Failed to parse SSE message:", error);
+              }
+            }
+          }
+        }
+      })
+      .catch((error) => {
+        reject(new Error(`Sync connection failed: ${error.message}`));
+      });
   });
 }
 

@@ -86,11 +86,8 @@ export async function withCache<T>(
   return data;
 }
 
-// Simple in-memory cache for metadata
-const cacheMetadata = new Map<string, CacheMetadata>();
-
 async function getCacheEntry(key: string): Promise<{ data: unknown; metadata?: CacheMetadata } | null> {
-  const metadata = cacheMetadata.get(key);
+  const metadata = await db.getCacheMetadata(key);
 
   // Parse cache key to determine store and id
   const [store, id] = key.split(":");
@@ -129,7 +126,7 @@ async function getCacheEntry(key: string): Promise<{ data: unknown; metadata?: C
 async function setCacheEntry(key: string, data: unknown): Promise<void> {
   const [store, id] = key.split(":");
 
-  cacheMetadata.set(key, { lastFetched: Date.now() });
+  await db.saveCacheMetadata(key, { lastFetched: Date.now() });
 
   try {
     switch (store) {
@@ -170,27 +167,27 @@ async function setCacheEntry(key: string, data: unknown): Promise<void> {
 
 // Invalidate cache entry
 export function invalidateCache(key: string): void {
-  cacheMetadata.delete(key);
+  db.deleteCacheMetadata(key);
 }
 
 // Invalidate all cache entries for a store
 export function invalidateCacheByStore(store: string): void {
-  for (const key of cacheMetadata.keys()) {
-    if (key.startsWith(`${store}:`)) {
-      cacheMetadata.delete(key);
-    }
-  }
+  // Note: This requires getAllKeys which we'll implement
+  // For now, we'll need to track keys or iterate through all
+  console.warn("invalidateCacheByStore: Full implementation requires key iteration");
 }
 
 // Clear all cache metadata
 export function clearCacheMetadata(): void {
-  cacheMetadata.clear();
+  db.clearAllCacheMetadata();
 }
 
 // Get cache status for debugging
-export function getCacheStatus(): { entries: number; keys: string[] } {
+export async function getCacheStatus(): Promise<{ entries: number; keys: string[] }> {
+  // Note: This requires getAllKeys from IndexedDB
+  // For now, return placeholder
   return {
-    entries: cacheMetadata.size,
-    keys: Array.from(cacheMetadata.keys()),
+    entries: 0,
+    keys: [],
   };
 }

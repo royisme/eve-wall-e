@@ -19,6 +19,10 @@ export interface WallEDB extends DBSchema {
     key: number;
     value: ActionRecord;
   };
+  cache: {
+    key: string;
+    value: CacheMetadataRecord;
+  };
 }
 
 export interface JobRecord {
@@ -72,12 +76,18 @@ export interface ActionRecord {
   retryCount: number;
 }
 
+export interface CacheMetadataRecord {
+  key: string;
+  lastFetched: number;
+  ttl?: number;
+}
+
 const DB_NAME = "wall-e-db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export async function initDB(): Promise<IDBPDatabase<WallEDB>> {
   return openDB<WallEDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains("jobs")) {
         const jobsStore = db.createObjectStore("jobs", { keyPath: "id" });
         jobsStore.createIndex("by-status", "status");
@@ -94,6 +104,12 @@ export async function initDB(): Promise<IDBPDatabase<WallEDB>> {
 
       if (!db.objectStoreNames.contains("actionQueue")) {
         db.createObjectStore("actionQueue", { keyPath: "id", autoIncrement: true });
+      }
+
+      // Migration for v2: Add cache metadata store
+      if (oldVersion < 2 && !db.objectStoreNames.contains("cache")) {
+        db.createObjectStore("cache", { keyPath: "key" });
+        console.log("[Migration] Added cache metadata store");
       }
     },
   });

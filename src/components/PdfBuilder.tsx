@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { eveApi, type PdfTemplate } from "@/lib/api";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 interface PdfBuilderProps {
   markdown: string;
@@ -104,7 +106,52 @@ function markdownToHtml(markdown: string, template: PdfTemplate): string {
 
 async function generatePdfBlob(markdown: string, template: PdfTemplate): Promise<Blob> {
   const html = markdownToHtml(markdown, template);
-  return new Blob([html], { type: 'text/html' });
+
+  // Create a temporary element to render HTML
+  // Note: markdown content is from user's editor or backend, trusted source
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  container.style.position = "fixed";
+  container.style.left = "-9999px";
+  container.style.width = "800px";
+  container.style.background = "white";
+  document.body.appendChild(container);
+
+  try {
+    // Convert to canvas
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+
+    // Create PDF (A4 size)
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgData = canvas.toDataURL("image/png");
+
+    const imgWidth = 210; // A4 width in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const pageHeight = 297; // A4 height in mm
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // Add first page
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    // Add additional pages if needed
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    return pdf.output("blob");
+  } finally {
+    document.body.removeChild(container);
+  }
 }
 
 export function PdfBuilder({ markdown, filename = "resume", tailoredResumeId, onComplete }: PdfBuilderProps) {
@@ -124,7 +171,7 @@ export function PdfBuilder({ markdown, filename = "resume", tailoredResumeId, on
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${filename}.html`;
+      link.download = `${filename}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

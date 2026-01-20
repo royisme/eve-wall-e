@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createTimeoutSignal } from "@/lib/utils";
 
 export type ConnectionStatus = "online" | "offline" | "reconnecting";
 
@@ -34,7 +35,7 @@ export function useConnectionStatus() {
 
           const response = await fetch(`http://localhost:${serverPort}/health`, {
             method: "GET",
-            signal: AbortSignal.timeout(5000),
+            signal: createTimeoutSignal(5000),
           }).catch(() => ({ ok: false }));
 
           eveReachable = response.ok;

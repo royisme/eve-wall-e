@@ -15,6 +15,8 @@ import { setToastCallback } from "@/lib/toast";
 import { handleApiError } from "@/lib/errors";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { syncService } from "@/lib/sync/syncService";
+import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 
 // Configure QueryClient with error handling and retry logic
 const queryClient = new QueryClient({
@@ -33,6 +35,7 @@ const queryClient = new QueryClient({
 
 function SidePanel() {
   const { t } = useTranslation();
+  const { status } = useConnectionStatus();
   const [activeTab, setActiveTab] = useState<TabId>("chat");
   const [showSettings, setShowSettings] = useState(false);
   const [hasConfig, setHasConfig] = useState<boolean | null>(null);
@@ -67,6 +70,24 @@ function SidePanel() {
       window.dispatchEvent(new CustomEvent("wall-e-toast", { detail: { type, message, id: Date.now().toString(), timestamp: Date.now() } }));
     });
   }, []);
+
+  // Start sync service on mount
+  useEffect(() => {
+    console.log("[App] Starting SyncService");
+    syncService.startAutoSync();
+    return () => {
+      console.log("[App] Stopping SyncService");
+      syncService.stopAutoSync();
+    };
+  }, []);
+
+  // Trigger sync when coming online
+  useEffect(() => {
+    if (status === "online") {
+      console.log("[App] Connection online, triggering sync");
+      syncService.processQueue(true);
+    }
+  }, [status]);
 
   if (hasConfig === null) {
     return (

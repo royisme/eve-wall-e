@@ -1,5 +1,5 @@
 import { initDB } from "./schema";
-import type { JobRecord, ResumeRecord, TailoredResumeRecord, ActionRecord } from "./schema";
+import type { JobRecord, ResumeRecord, TailoredResumeRecord, ActionRecord, CacheMetadataRecord } from "./schema";
 
 export async function getAllJobs(): Promise<JobRecord[]> {
   const db = await initDB();
@@ -165,4 +165,28 @@ export async function put<T extends { id: string }>(storeName: string, data: T):
   } catch (error) {
     console.warn(`Failed to save to ${storeName}:`, error);
   }
+}
+
+// ============================================
+// Cache Metadata Operations
+// ============================================
+
+export async function saveCacheMetadata(key: string, metadata: Omit<CacheMetadataRecord, "key">): Promise<void> {
+  const db = await initDB();
+  await db.put("cache", { key, ...metadata });
+}
+
+export async function getCacheMetadata(key: string): Promise<CacheMetadataRecord | undefined> {
+  const db = await initDB();
+  return db.get("cache", key);
+}
+
+export async function deleteCacheMetadata(key: string): Promise<void> {
+  const db = await initDB();
+  await db.delete("cache", key);
+}
+
+export async function clearAllCacheMetadata(): Promise<void> {
+  const db = await initDB();
+  await db.clear("cache");
 }
