@@ -91,25 +91,25 @@ export function AnalyticsModal({ open, onClose }: AnalyticsModalProps) {
               <Card className="bg-blue-500/5 border-blue-500/10">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold text-blue-600">{funnel.inbox}</div>
-                  <div className="text-xs text-muted-foreground">Inbox</div>
+                  <div className="text-xs text-muted-foreground">{t('analytics.labels.inbox')}</div>
                 </CardContent>
               </Card>
               <Card className="bg-primary/5 border-primary/10">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold text-primary">{funnel.applied}</div>
-                  <div className="text-xs text-muted-foreground">Applied</div>
+                  <div className="text-xs text-muted-foreground">{t('analytics.labels.applied')}</div>
                 </CardContent>
               </Card>
               <Card className="bg-accent/5 border-accent/10">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold text-accent">{funnel.interview}</div>
-                  <div className="text-xs text-muted-foreground">Interview</div>
+                  <div className="text-xs text-muted-foreground">{t('analytics.labels.interview')}</div>
                 </CardContent>
               </Card>
               <Card className="bg-green-500/5 border-green-500/10">
                 <CardContent className="p-3 text-center">
                   <div className="text-2xl font-bold text-green-600">{funnel.offer}</div>
-                  <div className="text-xs text-muted-foreground">Offers</div>
+                  <div className="text-xs text-muted-foreground">{t('analytics.labels.offers')}</div>
                 </CardContent>
               </Card>
             </div>
@@ -124,15 +124,15 @@ export function AnalyticsModal({ open, onClose }: AnalyticsModalProps) {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Inbox → Applied</span>
+                  <span className="text-muted-foreground">{t('analytics.conversions.inboxToApplied')}</span>
                   <Badge variant="secondary">{(funnel.conversionRates.applyRate * 100).toFixed(1)}%</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Applied → Interview</span>
+                  <span className="text-muted-foreground">{t('analytics.conversions.appliedToInterview')}</span>
                   <Badge variant="secondary">{(funnel.conversionRates.interviewRate * 100).toFixed(1)}%</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Interview → Offer</span>
+                  <span className="text-muted-foreground">{t('analytics.conversions.interviewToOffer')}</span>
                   <Badge variant="secondary">{(funnel.conversionRates.offerRate * 100).toFixed(1)}%</Badge>
                 </div>
               </CardContent>
@@ -146,10 +146,10 @@ export function AnalyticsModal({ open, onClose }: AnalyticsModalProps) {
               <CardContent>
                 <div className="space-y-2">
                   {[
-                    { label: 'Inbox', value: funnel.inbox, color: 'bg-blue-500' },
-                    { label: 'Applied', value: funnel.applied, color: 'bg-primary' },
-                    { label: 'Interview', value: funnel.interview, color: 'bg-accent' },
-                    { label: 'Offer', value: funnel.offer, color: 'bg-green-500' },
+                    { label: t('analytics.labels.inbox'), value: funnel.inbox, color: 'bg-blue-500' },
+                    { label: t('analytics.labels.applied'), value: funnel.applied, color: 'bg-primary' },
+                    { label: t('analytics.labels.interview'), value: funnel.interview, color: 'bg-accent' },
+                    { label: t('analytics.labels.offers'), value: funnel.offer, color: 'bg-green-500' },
                   ].map((item) => {
                     const maxValue = Math.max(funnel.inbox, funnel.applied, funnel.interview, funnel.offer) || 1;
                     const widthPercent = (item.value / maxValue) * 100;
@@ -193,7 +193,7 @@ export function AnalyticsModal({ open, onClose }: AnalyticsModalProps) {
                   ))}
                   {skills.top.length === 0 && (
                     <div className="text-xs text-muted-foreground text-center py-4">
-                      No skill data available yet
+                      {t('analytics.noData')}
                     </div>
                   )}
                 </div>

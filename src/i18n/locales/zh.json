@@ -39,13 +39,15 @@
     "title": "职位",
     "searchPlaceholder": "搜索职位...",
     "noResults": "未找到职位",
+    "viewAnalytics": "查看分析",
     "status": {
       "all": "全部",
       "inbox": "收件箱",
       "applied": "已申请",
       "interviewing": "面试中",
       "offer": "已录用",
-      "rejected": "已拒绝"
+      "rejected": "已拒绝",
+      "skipped": "已跳过"
     },
     "time": {
       "today": "今天",
@@ -98,7 +100,19 @@
     "topSkills": "热门技能",
     "skillGaps": "待提升技能",
     "matches": "次匹配",
-    "mentions": "次提及"
+    "mentions": "次提及",
+    "noData": "暂无技能数据",
+    "labels": {
+      "inbox": "收件箱",
+      "applied": "已申请",
+      "interview": "面试",
+      "offers": "录用"
+    },
+    "conversions": {
+      "inboxToApplied": "收件箱 → 已申请",
+      "appliedToInterview": "已申请 → 面试",
+      "interviewToOffer": "面试 → 录用"
+    }
   },
   "gapAnalysis": {
     "title": "差距分析",
@@ -125,19 +139,25 @@
     "characters": "字符",
     "unsavedChanges": "未保存的更改"
   },
-  "jobs": {
-    "viewAnalytics": "查看分析",
-    "status": {
-      "all": "全部",
-      "inbox": "收件箱",
-      "applied": "已申请",
-      "interviewing": "面试中",
-      "offer": "已录用",
-      "rejected": "已拒绝",
-      "skipped": "已跳过"
-    }
-  },
   "jobDetail": {
-    "buildPdf": "生成 PDF 简历"
+    "buildPdf": "生成 PDF 简历",
+    "back": "返回",
+    "viewOriginal": "查看原始职位",
+    "resume": "简历",
+    "status": "状态",
+    "matchAnalysis": "匹配分析",
+    "analyzing": "正在用 LLM 分析职位匹配度...",
+    "refresh": "刷新",
+    "analyze": "分析",
+    "clickAnalyze": "点击「分析」获取 AI 驱动的职位匹配分析",
+    "tailoring": "正在定制简历...",
+    "tailorResume": "为该职位定制简历",
+    "tailoredSuccess": "简历定制成功！请查看工作区标签。",
+    "selectResume": "选择简历",
+    "jobDescription": "职位描述",
+    "strengths": "优势",
+    "gaps": "差距",
+    "suggestions": "建议",
+    "pdfNote": "注意：此功能使用该职位的最新定制版本。"
   }
 }

@@ -39,13 +39,15 @@
     "title": "Jobs",
     "searchPlaceholder": "Search jobs...",
     "noResults": "No jobs found",
+    "viewAnalytics": "View Analytics",
     "status": {
       "all": "All",
       "inbox": "Inbox",
       "applied": "Applied",
       "interviewing": "Interviewing",
       "offer": "Offer",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "skipped": "Skipped"
     },
     "time": {
       "today": "Today",
@@ -98,7 +100,19 @@
     "topSkills": "Top Performing Skills",
     "skillGaps": "Skills to Address",
     "matches": "matches",
-    "mentions": "mentions"
+    "mentions": "mentions",
+    "noData": "No skill data available yet",
+    "labels": {
+      "inbox": "Inbox",
+      "applied": "Applied",
+      "interview": "Interview",
+      "offers": "Offers"
+    },
+    "conversions": {
+      "inboxToApplied": "Inbox → Applied",
+      "appliedToInterview": "Applied → Interview",
+      "interviewToOffer": "Interview → Offer"
+    }
   },
   "gapAnalysis": {
     "title": "Gap Analysis",
@@ -125,19 +139,25 @@
     "characters": "characters",
     "unsavedChanges": "Unsaved changes"
   },
-  "jobs": {
-    "viewAnalytics": "View Analytics",
-    "status": {
-      "all": "All",
-      "inbox": "Inbox",
-      "applied": "Applied",
-      "interviewing": "Interviewing",
-      "offer": "Offer",
-      "rejected": "Rejected",
-      "skipped": "Skipped"
-    }
-  },
   "jobDetail": {
-    "buildPdf": "Build PDF Resume"
+    "buildPdf": "Build PDF Resume",
+    "back": "Back",
+    "viewOriginal": "View original posting",
+    "resume": "Resume",
+    "status": "Status",
+    "matchAnalysis": "Match Analysis",
+    "analyzing": "Analyzing job fit with LLM...",
+    "refresh": "Refresh",
+    "analyze": "Analyze",
+    "clickAnalyze": "Click \"Analyze\" to get AI-powered job fit analysis",
+    "tailoring": "Tailoring Resume...",
+    "tailorResume": "Tailor Resume for This Job",
+    "tailoredSuccess": "Resume tailored successfully! Check the Workspace tab.",
+    "selectResume": "Select resume",
+    "jobDescription": "Job Description",
+    "strengths": "Strengths",
+    "gaps": "Gaps",
+    "suggestions": "Suggestions",
+    "pdfNote": "Note: This uses the latest tailored version for this job."
   }
 }

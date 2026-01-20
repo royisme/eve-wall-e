@@ -28,18 +28,26 @@ async function getBaseUrl(): Promise<string> {
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  // Don't set Content-Type for FormData - let browser set it with boundary
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const mergedHeaders = {
+    ...headers,
     ...(options.headers as Record<string, string>),
   };
-  
-  const response = await fetch(url, { ...options, headers });
-  
+
+  const response = await fetch(url, { ...options, headers: mergedHeaders });
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Eve API error: ${response.status} - ${error}`);
   }
-  
+
   return response;
 }
 
