@@ -1,0 +1,62 @@
+/* Map Milkdown Nord theme variables to Eve's Tailwind variables */
+.milkdown-theme-nord {
+  /* Backgrounds */
+  --bg-color: transparent !important;
+  
+  /* Use our CSS variables for colors */
+  --milkdown-neutral-50: var(--background);
+  --milkdown-neutral-100: var(--muted);     /* Blockquote bg, code block bg */
+  --milkdown-neutral-200: var(--border);    /* Borders */
+  
+  /* Text */
+  --milkdown-neutral-800: var(--foreground); 
+  --milkdown-neutral-700: var(--muted-foreground);
+  --milkdown-neutral-900: var(--foreground);
+  
+  /* Primary/Accent */
+  --milkdown-nord10: var(--primary);        /* Links */
+  --milkdown-primary: var(--primary);
+  --milkdown-secondary: var(--secondary);
+  
+  /* Typography */
+  --milkdown-solid-font: var(--font-sans);
+  --milkdown-code-font: var(--font-mono);
+  --milkdown-font-size: 0.875rem; /* text-sm */
+  --milkdown-line-height: 1.7;
+}
+
+/* Editor Container Tweaks */
+.milkdown .editor {
+  padding: 1.5rem !important;
+  max-width: none !important; 
+  outline: none !important;
+}
+
+/* Code Blocks */
+.milkdown-theme-nord .code-fence {
+  background-color: var(--muted) !important;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono) !important;
+  font-size: 0.85em;
+}
+
+/* Blockquotes */
+.milkdown-theme-nord blockquote {
+  border-left-color: var(--primary) !important;
+  background-color: var(--muted) !important;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* Links */
+.milkdown-theme-nord a {
+  color: var(--primary) !important;
+  text-decoration: none;
+}
+.milkdown-theme-nord a:hover {
+  text-decoration: underline;
+}
+
+/* Selection */
+.milkdown-theme-nord ::selection {
+  background-color: color-mix(in oklch, var(--primary) 20%, transparent);
+}
