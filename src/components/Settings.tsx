@@ -69,7 +69,11 @@ export function Settings({ onSave }: SettingsProps) {
     i18n.changeLanguage(language);
     // Save language preference immediately
     if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.set({ language });
+      chrome.storage.local.set({ language }, () => {
+        if (chrome.runtime.lastError) {
+          console.error("Failed to save language:", chrome.runtime.lastError.message);
+        }
+      });
     }
   }, [language, i18n]);
 
@@ -77,14 +81,20 @@ export function Settings({ onSave }: SettingsProps) {
     setIsSaving(true);
     try {
       if (typeof chrome !== "undefined" && chrome.storage) {
-        await new Promise<void>((resolve) => {
-          chrome.storage.local.set({ serverPort: port, language }, () => resolve());
+        await new Promise<void>((resolve, reject) => {
+          chrome.storage.local.set({ serverPort: port, language }, () => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else {
+              resolve();
+            }
+          });
         });
       }
       toast("success", t("settings.saved"));
       onSave();
     } catch (error) {
-      toast("error", "Failed to save settings");
+      toast("error", error instanceof Error ? error.message : "Failed to save settings");
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +106,8 @@ export function Settings({ onSave }: SettingsProps) {
     setEveVersion("");
 
     try {
-      const health = await eveApi.getHealth();
+      const testBaseUrl = `http://localhost:${port}`;
+      const health = await eveApi.getHealth(testBaseUrl);
       setConnectionStatus("success");
       setEveVersion(health.version);
     } catch (error) {

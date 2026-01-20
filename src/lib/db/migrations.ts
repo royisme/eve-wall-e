@@ -19,11 +19,22 @@ export async function migrate(db: IDBDatabase, oldVersion: number | null, newVer
 }
 
 export async function getCurrentVersion(): Promise<number> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const request = indexedDB.open("wall-e-db");
+
+    request.onsuccess = () => {
+      const db = request.result;
+      const version = db.version || 1;
+      db.close();
+      resolve(version);
+    };
+
     request.onupgradeneeded = () => {
       resolve(request.result?.version || 1);
     };
-    request.onerror = () => resolve(1);
+
+    request.onerror = () => {
+      reject(new Error("Failed to get database version"));
+    };
   });
 }

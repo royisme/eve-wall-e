@@ -87,7 +87,15 @@ export async function withCache<T>(
 }
 
 async function getCacheEntry(key: string): Promise<{ data: unknown; metadata?: CacheMetadata } | null> {
-  const metadata = await db.getCacheMetadata(key);
+  let metadata: CacheMetadata | undefined;
+
+  // Best-effort metadata retrieval
+  try {
+    metadata = await db.getCacheMetadata(key);
+  } catch (error) {
+    console.warn(`Failed to get cache metadata for ${key}:`, error);
+    metadata = undefined;
+  }
 
   // Parse cache key to determine store and id
   const [store, id] = key.split(":");
@@ -126,7 +134,12 @@ async function getCacheEntry(key: string): Promise<{ data: unknown; metadata?: C
 async function setCacheEntry(key: string, data: unknown): Promise<void> {
   const [store, id] = key.split(":");
 
-  await db.saveCacheMetadata(key, { lastFetched: Date.now() });
+  // Best-effort metadata save
+  try {
+    await db.saveCacheMetadata(key, { lastFetched: Date.now() });
+  } catch (error) {
+    console.warn(`Failed to save cache metadata for ${key}:`, error);
+  }
 
   try {
     switch (store) {

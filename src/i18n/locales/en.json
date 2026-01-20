@@ -186,26 +186,5 @@
     "reconnecting": "Reconnecting to Eve...",
     "connected": "Connected to Eve",
     "dismiss": "Dismiss"
-  },
-  "jobDetail": {
-    "buildPdf": "Build PDF Resume",
-    "back": "Back",
-    "viewOriginal": "View original posting",
-    "resume": "Resume",
-    "status": "Status",
-    "matchAnalysis": "Match Analysis",
-    "analyzing": "Analyzing job fit with LLM...",
-    "refresh": "Refresh",
-    "analyze": "Analyze",
-    "clickAnalyze": "Click \"Analyze\" to get AI-powered job fit analysis",
-    "tailoring": "Tailoring Resume...",
-    "tailorResume": "Tailor Resume for This Job",
-    "tailoredSuccess": "Resume tailored successfully! Check the Workspace tab.",
-    "selectResume": "Select resume",
-    "jobDescription": "Job Description",
-    "strengths": "Strengths",
-    "gaps": "Gaps",
-    "suggestions": "Suggestions",
-    "pdfNote": "Note: This uses the latest tailored version for this job."
   }
 }

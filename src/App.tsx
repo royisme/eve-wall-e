@@ -71,16 +71,6 @@ function SidePanel() {
     });
   }, []);
 
-  // Start sync service on mount
-  useEffect(() => {
-    console.log("[App] Starting SyncService");
-    syncService.startAutoSync();
-    return () => {
-      console.log("[App] Stopping SyncService");
-      syncService.stopAutoSync();
-    };
-  }, []);
-
   // Trigger sync when coming online
   useEffect(() => {
     if (status === "online") {
@@ -157,6 +147,16 @@ function WorkspaceWithErrorBoundary() {
 }
 
 export function App() {
+  // Start sync service on App mount (global lifecycle)
+  useEffect(() => {
+    console.log("[App] Starting SyncService");
+    syncService.startAutoSync();
+    return () => {
+      console.log("[App] Stopping SyncService");
+      syncService.stopAutoSync();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AppErrorBoundary>

@@ -43,6 +43,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
   const queryClient = useQueryClient();
   const [selectedResumeId, setSelectedResumeId] = useState<number | null>(null);
   const [showPdfBuilder, setShowPdfBuilder] = useState(false);
+  const [tailoredResumeContent, setTailoredResumeContent] = useState<string>("");
   const statusConfig = getStatusConfig(t);
 
   const { data: resumesData } = useQuery({
@@ -91,7 +92,8 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
       if (!effectiveResumeId) throw new Error("No resume selected");
       return eveApi.tailorResume(jobId, effectiveResumeId, forceNew);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setTailoredResumeContent(data.content || "");
       queryClient.invalidateQueries({ queryKey: ["job-detail", jobId] });
     },
   });
@@ -310,14 +312,16 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                   </>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowPdfBuilder(true)}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {t('jobDetail.buildPdf')}
-              </Button>
+              {tailorMutation.isSuccess && tailoredResumeContent && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowPdfBuilder(true)}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {t('jobDetail.buildPdf')}
+                </Button>
+              )}
               {tailorMutation.isSuccess && (
                 <div className="mt-2 text-xs text-green-600 text-center">
                   ✓ {t('jobDetail.tailoredSuccess')}
@@ -337,7 +341,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
                 </Button>
               </div>
               <PdfBuilder
-                markdown=""
+                markdown={tailoredResumeContent}
                 filename={`${job.title}-${job.company}`}
                 onComplete={() => setShowPdfBuilder(false)}
               />

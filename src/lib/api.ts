@@ -235,9 +235,9 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
   return res.json();
 }
 
-export async function getHealth(): Promise<HealthResponse> {
-  const baseUrl = await getBaseUrl();
-  const res = await fetch(`${baseUrl}/health`);
+export async function getHealth(baseUrl?: string): Promise<HealthResponse> {
+  const url = baseUrl || await getBaseUrl();
+  const res = await fetch(`${url}/health`);
   if (!res.ok) throw new Error(`Eve API error: ${res.status}`);
   return res.json();
 }
@@ -298,6 +298,8 @@ export async function syncJobs(onProgress?: (synced: number, total: number) => v
 
   return new Promise((resolve, reject) => {
     const controller = new AbortController();
+    let syncedSeen = 0;
+    let newJobsSeen = 0;
 
     fetch(`${baseUrl}/jobs/sync`, {
       method: "GET",
@@ -308,6 +310,7 @@ export async function syncJobs(onProgress?: (synced: number, total: number) => v
     })
       .then(async (response) => {
         if (!response.ok) {
+          controller.abort();
           throw new Error(`Sync failed: ${response.status}`);
         }
 
@@ -315,42 +318,75 @@ export async function syncJobs(onProgress?: (synced: number, total: number) => v
         const decoder = new TextDecoder();
 
         if (!reader) {
+          controller.abort();
           throw new Error("No response body");
         }
 
         let buffer = "";
 
-        while (true) {
-          const { done, value } = await reader.read();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
 
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(line.slice(6));
-
-                if (data.status === "processing" && data.synced !== undefined && data.total !== undefined) {
-                  if (onProgress) onProgress(data.synced, data.total);
-                } else if (data.status === "complete") {
-                  resolve({ synced: data.synced || 0, newJobs: data.newJobs || 0 });
-                  return;
-                } else if (data.status === "error") {
-                  reject(new Error(data.message || "Sync failed"));
-                  return;
+            if (done) {
+              // Handle EOF - process any remaining buffer
+              if (buffer.trim()) {
+                const lines = buffer.split("\n");
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    try {
+                      const data = JSON.parse(line.slice(6));
+                      if (data.synced !== undefined) syncedSeen = data.synced;
+                      if (data.newJobs !== undefined) newJobsSeen = data.newJobs;
+                      if (data.total !== undefined && onProgress) {
+                        onProgress(syncedSeen, data.total);
+                      }
+                    } catch (error) {
+                      console.warn("Failed to parse trailing SSE message:", error);
+                    }
+                  }
                 }
-              } catch (error) {
-                console.warn("Failed to parse SSE message:", error);
+              }
+              // No explicit complete/error received, resolve with last seen values
+              controller.abort();
+              resolve({ synced: syncedSeen, newJobs: newJobsSeen });
+              return;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+
+                  if (data.status === "processing" && data.synced !== undefined && data.total !== undefined) {
+                    syncedSeen = data.synced;
+                    if (onProgress) onProgress(data.synced, data.total);
+                  } else if (data.status === "complete") {
+                    controller.abort();
+                    resolve({ synced: data.synced || syncedSeen, newJobs: data.newJobs || newJobsSeen });
+                    return;
+                  } else if (data.status === "error") {
+                    controller.abort();
+                    reject(new Error(data.message || "Sync failed"));
+                    return;
+                  }
+                } catch (error) {
+                  console.warn("Failed to parse SSE message:", error);
+                }
               }
             }
           }
+        } catch (error) {
+          controller.abort();
+          throw error;
         }
       })
       .catch((error) => {
+        controller.abort();
         reject(new Error(`Sync connection failed: ${error.message}`));
       });
   });

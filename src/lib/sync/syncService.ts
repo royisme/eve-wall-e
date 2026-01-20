@@ -21,30 +21,39 @@ export class SyncService {
     }
 
     this.isProcessing = true;
-    const actions = await getAllActions();
     let synced = 0;
 
-    for (const action of actions) {
-      if (action.status !== "pending" || action.id === undefined) continue;
+    try {
+      const actions = await getAllActions();
 
-      try {
-        await this.executeAction(action as ActionRecord & { id: number });
-        synced++;
-        await removeAction(action.id);
-      } catch (error) {
-        console.error(`[Sync] Action ${action.id} failed:`, error);
+      for (const action of actions) {
+        if (action.status !== "pending" || action.id === undefined) continue;
 
-        if (action.retryCount >= MAX_RETRIES) {
-          console.error(`[Sync] Action ${action.id} failed after ${MAX_RETRIES} retries, removing`);
+        try {
+          await this.executeAction(action as ActionRecord & { id: number });
+          synced++;
           await removeAction(action.id);
-        } else {
-          await incrementRetryCount(action.id);
+        } catch (error) {
+          console.error(`[Sync] Action ${action.id} failed:`, error);
+
+          if (action.retryCount >= MAX_RETRIES) {
+            console.error(`[Sync] Action ${action.id} failed after ${MAX_RETRIES} retries, removing`);
+            await removeAction(action.id);
+          } else {
+            // Increment retry count and reset status to pending for retry
+            await incrementRetryCount(action.id);
+            await updateActionStatus(action.id, "pending");
+          }
         }
       }
-    }
 
-    this.isProcessing = false;
-    return { success: true, synced };
+      return { success: true, synced };
+    } catch (error) {
+      console.error("[Sync] processQueue error:", error);
+      return { success: false, synced, error: String(error) };
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
   private async executeAction(action: ActionRecord & { id: number }): Promise<void> {
