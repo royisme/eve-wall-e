@@ -21,6 +21,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { eveApi, type TailoredResume } from "@/lib/api";
+import { MilkdownEditor } from "@/components/MilkdownEditor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function Workspace() {
   const { t } = useTranslation();
@@ -219,13 +221,25 @@ export function Workspace() {
             </div>
           )}
 
-          <Textarea
-            className="flex-1 font-mono text-sm resize-none border-0 focus-visible:ring-0 p-6 leading-relaxed bg-transparent selection:bg-primary/20 scrollbar-thin rounded-none"
-            value={content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="Tailored resume content will appear here..."
-            spellCheck={false}
-          />
+          <div className="flex-1 overflow-hidden">
+            <ErrorBoundary 
+              fallback={
+                <Textarea
+                  className="flex-1 h-full font-mono text-sm resize-none border-0 focus-visible:ring-0 p-6 leading-relaxed bg-transparent selection:bg-primary/20 scrollbar-thin rounded-none"
+                  value={content}
+                  onChange={(e) => handleContentChange(e.target.value)}
+                  placeholder="Tailored resume content will appear here..."
+                  spellCheck={false}
+                />
+              }
+            >
+              <MilkdownEditor
+                className="h-full"
+                initialValue={content}
+                onChange={handleContentChange}
+              />
+            </ErrorBoundary>
+          </div>
         </div>
       </div>
     </div>
