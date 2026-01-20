@@ -60,17 +60,36 @@
     "analyzing": "分析中..."
   },
   "settings": {
-    "title": "配置",
-    "description": "设置与 Eve 服务器的连接。",
+    "title": "设置",
+    "description": "配置 Wall-E 扩展",
     "serverPort": "服务器端口",
     "language": "语言",
+    "languageDesc": "选择你的首选语言",
     "languages": {
       "en": "English",
       "zh": "中文"
     },
     "saveButton": "保存配置",
     "devSaved": "开发模式：已保存（模拟）",
-    "saved": "配置已保存！"
+    "saved": "设置已保存！",
+    "connection": "连接",
+    "connectionDesc": "Eve 服务器连接设置",
+    "testConnection": "测试",
+    "connected": "已连接",
+    "connectionFailed": "连接失败",
+    "dataManagement": "数据管理",
+    "dataManagementDesc": "管理本地缓存和同步",
+    "pendingActions": "{{count}} 个待处理操作",
+    "forceSync": "强制同步",
+    "clearCache": "清除缓存",
+    "confirmClearCache": "确定要清除所有缓存数据吗？此操作无法撤销。",
+    "cacheCleared": "缓存已清除",
+    "syncComplete": "同步完成",
+    "about": "关于",
+    "appName": "应用名称",
+    "version": "版本",
+    "documentation": "文档",
+    "reportIssue": "报告问题"
   },
   "workspace": {
     "title": "Eve 工作区",

@@ -60,17 +60,36 @@
     "analyzing": "Analyzing..."
   },
   "settings": {
-    "title": "Configuration",
-    "description": "Set up connection to Eve server.",
+    "title": "Settings",
+    "description": "Configure your Wall-E extension",
     "serverPort": "Server Port",
     "language": "Language",
+    "languageDesc": "Choose your preferred language",
     "languages": {
       "en": "English",
       "zh": "中文"
     },
     "saveButton": "Save Configuration",
     "devSaved": "Dev mode: saved (mock)",
-    "saved": "Configuration saved!"
+    "saved": "Settings saved!",
+    "connection": "Connection",
+    "connectionDesc": "Eve server connection settings",
+    "testConnection": "Test",
+    "connected": "Connected",
+    "connectionFailed": "Connection failed",
+    "dataManagement": "Data Management",
+    "dataManagementDesc": "Manage local cache and sync",
+    "pendingActions": "{{count}} pending actions",
+    "forceSync": "Force Sync",
+    "clearCache": "Clear Cache",
+    "confirmClearCache": "Are you sure you want to clear all cached data? This action cannot be undone.",
+    "cacheCleared": "Cache cleared successfully",
+    "syncComplete": "Sync completed",
+    "about": "About",
+    "appName": "App Name",
+    "version": "Version",
+    "documentation": "Documentation",
+    "reportIssue": "Report Issue"
   },
   "workspace": {
     "title": "Eve Workspace",
