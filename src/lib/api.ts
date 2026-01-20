@@ -46,6 +46,13 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
 
   const response = await fetch(url, { ...options, headers: mergedHeaders });
 
+  // Handle auth errors globally - dispatch event for app to handle
+  if (response.status === 401) {
+    window.dispatchEvent(new CustomEvent("auth-error", {
+      detail: { status: 401, message: "Token invalid" }
+    }));
+  }
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Eve API error: ${response.status} - ${error}`);
