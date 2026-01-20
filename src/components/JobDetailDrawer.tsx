@@ -85,6 +85,16 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
     },
   });
 
+  const tailorMutation = useMutation({
+    mutationFn: (forceNew: boolean) => {
+      if (!effectiveResumeId) throw new Error("No resume selected");
+      return eveApi.tailorResume(jobId, effectiveResumeId, forceNew);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-detail", jobId] });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
@@ -273,6 +283,35 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
               {!analysis && !analyzeMutation.isPending && (
                 <div className="text-xs text-muted-foreground text-center py-4">
                   Click "Analyze" to get AI-powered job fit analysis
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {effectiveResumeId && analysis && (
+          <Card>
+            <CardContent className="p-3">
+              <Button
+                className="w-full"
+                disabled={tailorMutation.isPending}
+                onClick={() => tailorMutation.mutate(false)}
+              >
+                {tailorMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Tailoring Resume...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Tailor Resume for This Job
+                  </>
+                )}
+              </Button>
+              {tailorMutation.isSuccess && (
+                <div className="mt-2 text-xs text-green-600 text-center">
+                  ✓ Resume tailored successfully! Check the Workspace tab.
                 </div>
               )}
             </CardContent>

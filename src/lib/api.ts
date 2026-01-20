@@ -129,6 +129,17 @@ export interface JobDetailResponse {
   analysis?: JobAnalysis;
 }
 
+export interface TailoredResume {
+  id: number;
+  jobId: number;
+  resumeId: number;
+  content: string;
+  suggestions: string[];
+  version: number;
+  isNew: boolean;
+  createdAt: string;
+}
+
 // ============================================
 // API Functions
 // ============================================
@@ -278,6 +289,34 @@ export async function setDefaultResume(id: number): Promise<{ resume: Resume }> 
   return res.json();
 }
 
+// Tailor API
+export async function tailorResume(jobId: number, resumeId: number, forceNew = false): Promise<TailoredResume> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/tailor/${jobId}`, {
+    method: "POST",
+    body: JSON.stringify({ resumeId, forceNew }),
+  });
+  return res.json();
+}
+
+export async function getTailoredVersions(jobId: number, resumeId?: number): Promise<{ versions: TailoredResume[] }> {
+  const baseUrl = await getBaseUrl();
+  const query = new URLSearchParams();
+  if (resumeId) query.set("resumeId", String(resumeId));
+  
+  const res = await fetchWithAuth(`${baseUrl}/tailor/${jobId}?${query}`);
+  return res.json();
+}
+
+export async function updateTailoredResume(id: number, content: string): Promise<{ tailoredResume: TailoredResume }> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(`${baseUrl}/tailor/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ content }),
+  });
+  return res.json();
+}
+
 // Job Detail & Analysis API
 export async function getJobDetail(id: number, params?: { resumeId?: number }): Promise<JobDetailResponse> {
   const baseUrl = await getBaseUrl();
@@ -334,6 +373,9 @@ export const eveApi = {
   updateResume,
   deleteResume,
   setDefaultResume,
+  tailorResume,
+  getTailoredVersions,
+  updateTailoredResume,
 };
 
 export default eveApi;
