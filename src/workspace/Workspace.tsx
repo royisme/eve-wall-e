@@ -1,26 +1,19 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
   Wand2,
-  FileText,
   Briefcase,
   Save,
-  ChevronLeft,
   History,
-  AlertCircle,
-  CheckCircle,
   FileCode,
-  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { eveApi, type TailoredResume, type JobAnalysis } from "@/lib/api";
+import { eveApi } from "@/lib/api";
 import { MilkdownEditor } from "@/components/MilkdownEditor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PdfBuilder } from "@/components/PdfBuilder";
@@ -28,7 +21,6 @@ import { GapAnalysisPanel } from "@/components/GapAnalysisPanel";
 import { OfflineBanner } from "@/components/OfflineBanner";
 
 export function Workspace() {
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const jobIdParam = searchParams.get("jobId");

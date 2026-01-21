@@ -132,7 +132,7 @@ async function getCacheEntry(key: string): Promise<{ data: unknown; metadata?: C
 }
 
 async function setCacheEntry(key: string, data: unknown): Promise<void> {
-  const [store, id] = key.split(":");
+  const [store, _id] = key.split(":");
 
   // Best-effort metadata save
   try {
@@ -184,7 +184,7 @@ export function invalidateCache(key: string): void {
 }
 
 // Invalidate all cache entries for a store
-export function invalidateCacheByStore(store: string): void {
+export function invalidateCacheByStore(_store: string): void {
   // Note: This requires getAllKeys which we'll implement
   // For now, we'll need to track keys or iterate through all
   console.warn("invalidateCacheByStore: Full implementation requires key iteration");

@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { eveApi, type PdfTemplate } from "@/lib/api";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-import DOMPurify from "dompurify";
 
 interface PdfBuilderProps {
   markdown: string;

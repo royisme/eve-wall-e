@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { X, Save, Loader2, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { eveApi, type Resume } from "@/lib/api";
 import { MilkdownEditor } from "./MilkdownEditor";

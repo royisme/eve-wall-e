@@ -186,5 +186,57 @@
     "reconnecting": "Reconnecting to Eve...",
     "connected": "Connected to Eve",
     "dismiss": "Dismiss"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Wall-E",
+      "subtitle": "Your AI-Powered Job Hunting Copilot",
+      "description": "Wall-E connects to Eve, your local AI assistant, to help you manage job applications.",
+      "cta": "Get Started"
+    },
+    "configure": {
+      "title": "Connect to Eve",
+      "subtitle": "Make sure Eve is running on your computer.",
+      "serverAddress": "Server Address",
+      "port": "Port",
+      "testConnection": "Test",
+      "continue": "Continue",
+      "connected": "Connected to Eve",
+      "connectionTimedOut": "Connection timed out",
+      "connectionFailed": "Connection failed",
+      "hint": "Run `bun run serve` in Eve directory to start server",
+      "testingConnection": "Testing connection...",
+      "back": "Back"
+    },
+    "pairing": {
+      "title": "Pairing...",
+      "requesting": "Requesting secure connection from Eve server...",
+      "connecting": "Connecting to Eve...",
+      "connectionVerified": "Connection verified",
+      "tokenReceived": "Token received",
+      "savingCredentials": "Saving credentials...",
+      "pairingFailed": "Pairing Failed",
+      "retry": "Retry",
+      "pairingSuccessful": "Pairing Successful!"
+    },
+    "completed": {
+      "title": "You're all set!",
+      "description": "Wall-E is now connected to Eve and ready to help you land your dream job.",
+      "server": "Server",
+      "version": "Eve Version",
+      "paired": "Paired",
+      "startButton": "Start Using"
+    }
+  },
+  "reconnect": {
+    "title": "Connection Lost",
+    "description": "Your session with Eve has expired or become invalid.",
+    "reasons": {
+      "intro": "This can happen if:",
+      "serverRestarted": "Eve server was restarted",
+      "anotherDevice": "Another device paired with Eve",
+      "tokenRevoked": "Token was manually revoked"
+    },
+    "button": "Reconnect"
   }
 }

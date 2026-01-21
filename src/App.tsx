@@ -8,6 +8,8 @@ import { Chat } from "@/components/Chat";
 import { JobsList } from "@/components/JobsList";
 import { ResumeLibrary } from "@/components/ResumeLibrary";
 import { Workspace } from "@/workspace/Workspace";
+import { Onboarding } from "@/components/onboarding";
+import { ReconnectPrompt } from "@/components/ReconnectPrompt";
 import { Toaster } from "@/components/ui/toaster";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -17,6 +19,8 @@ import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { syncService } from "@/lib/sync/syncService";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 // Configure QueryClient with error handling and retry logic
 const queryClient = new QueryClient({
@@ -36,27 +40,11 @@ const queryClient = new QueryClient({
 function SidePanel() {
   const { t } = useTranslation();
   const { status } = useConnectionStatus();
+  const { status: authStatus, clearAndRestart, retry } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>("chat");
   const [showSettings, setShowSettings] = useState(false);
-  const [hasConfig, setHasConfig] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.get(["serverPort"], (result: { serverPort?: string }) => {
-        if (result.serverPort) {
-          setHasConfig(true);
-        } else {
-          setHasConfig(false);
-          setShowSettings(true);
-        }
-      });
-    } else {
-      setHasConfig(true);
-    }
-  }, []);
 
   const handleConfigSaved = () => {
-    setHasConfig(true);
     setShowSettings(false);
   };
 
@@ -79,7 +67,8 @@ function SidePanel() {
     }
   }, [status]);
 
-  if (hasConfig === null) {
+  // Loading state - checking auth or validating (block rendering during validation)
+  if (authStatus === "loading" || authStatus === "validating") {
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 animate-pulse">
@@ -87,6 +76,32 @@ function SidePanel() {
              <Loader2 className="h-5 w-5 text-primary animate-spin" />
            </div>
            <span className="text-sm font-medium text-muted-foreground tracking-wide">{t('common.loading')}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Not paired - show onboarding wizard
+  if (authStatus === "not_paired") {
+    return <Onboarding onComplete={() => window.location.reload()} />;
+  }
+
+  // Token invalid - show reconnect prompt
+  if (authStatus === "invalid") {
+    return <ReconnectPrompt onReconnect={clearAndRestart} />;
+  }
+
+  // Error state - show error screen with retry button
+  if (authStatus === "error") {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 max-w-md px-6">
+          <span className="text-sm text-muted-foreground">
+            Something went wrong
+          </span>
+          <Button onClick={retry} size="sm">
+            Retry
+          </Button>
         </div>
       </div>
     );

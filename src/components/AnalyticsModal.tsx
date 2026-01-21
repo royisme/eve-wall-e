@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   X,
   Calendar,
   Zap,
@@ -14,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { eveApi, type AnalyticsPeriod, type FunnelMetrics, type SkillInsights } from "@/lib/api";
+import { eveApi, type AnalyticsPeriod } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface AnalyticsModalProps {

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Search, Bookmark, X, Briefcase, Zap } from "lucide-react";
+import { Bookmark, X, Briefcase, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface DetectedJob {

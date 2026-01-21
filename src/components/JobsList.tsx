@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search, ExternalLink, Building2, MapPin, Clock, Briefcase, Zap, RefreshCw, Star, BarChart3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { eveApi, type Job, type JobStatus } from "@/lib/api";
+import { eveApi, type JobStatus } from "@/lib/api";
 import { JobDetailDrawer } from "@/components/JobDetailDrawer";
 import { AnalyticsModal } from "@/components/AnalyticsModal";
 
@@ -84,7 +84,7 @@ export function JobsList() {
       if (days === 0) return t('jobs.time.today');
       if (days === 1) return t('jobs.time.yesterday');
       return t('jobs.time.daysAgo', { count: days });
-    } catch (e) {
+    } catch {
       return "Unknown date";
     }
   };

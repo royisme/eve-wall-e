@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   FileText, 
@@ -28,7 +27,6 @@ import { eveApi, type Resume } from "@/lib/api";
 import { ResumeEditorModal } from "@/components/ResumeEditorModal";
 
 export function ResumeLibrary() {
-  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [importMode, setImportingMode] = useState<'markdown' | 'pdf' | null>(null);
@@ -77,7 +75,7 @@ export function ResumeLibrary() {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const base64 = (event.target?.result as string).split(',')[1];
+      const base64 = (event.target?.result as string | undefined)?.split(',')[1];
       setNewName(file.name.replace(/\.[^/.]+$/, ""));
       setNewContent(base64);
       setImportingMode('pdf');
