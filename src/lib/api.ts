@@ -1,54 +1,17 @@
 import { endpoints, buildUrl } from "./endpoints";
+import { getAuthToken, getServerUrl } from "./auth";
 
-const DEFAULT_PORT = 3033;
-
-// Custom auth header for Eve API
 const AUTH_HEADER = "x-eve-token";
 
-// Import auth functions from auth.ts (dynamic import to avoid circular dependency)
-let getAuthTokenFn: () => Promise<string | null>;
-let getBaseUrlFn: () => Promise<string>;
-
-import("@/lib/auth").then((module: any) => {
-  getAuthTokenFn = module.getAuthToken;
-  getBaseUrlFn = module.getServerUrl;
-}).catch(() => {
-  // Fallback if auth module fails to load
-  console.warn("[api.ts] Failed to import auth module, using fallback");
-  getAuthTokenFn = async () => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      return new Promise((resolve) => {
-        chrome.storage.local.get(["authToken"], (result: { authToken?: string }) => {
-          resolve(result.authToken || null);
-        });
-      });
-    }
-    return null;
-  };
-  getBaseUrlFn = async () => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      return new Promise((resolve) => {
-        chrome.storage.local.get(["serverPort"], (result: { serverPort?: string }) => {
-          const port = result.serverPort || DEFAULT_PORT;
-          resolve(`http://localhost:${port}`);
-        });
-      });
-    }
-    return `http://localhost:${DEFAULT_PORT}`;
-  };
-});
-
-export function getAuthToken(): Promise<string | null> {
-  return getAuthTokenFn();
-}
+export { getAuthToken };
 
 export function getBaseUrl(): Promise<string> {
-  return getBaseUrlFn();
+  return getServerUrl();
 }
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
-  const headers: Record<string, string> = token ? { [AUTH_HEADER]: token } : {};
+  const headers: Record<string, string> = { [AUTH_HEADER]: token };
 
   // Don't set Content-Type for FormData - let browser set it with boundary
   if (!(options.body instanceof FormData)) {

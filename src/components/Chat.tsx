@@ -107,7 +107,7 @@ export function Chat() {
                   key={key}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start text-xs h-10 rounded-xl hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+                  className="w-full justify-start text-xs h-10 rounded-xl hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
                   onClick={() => handleSend(t(`chat.suggestions.${key}`))}
                 >
                   <Sparkles className="h-3 w-3 mr-2 opacity-70" />
@@ -121,14 +121,14 @@ export function Chat() {
             {messages.map((msg) => (
               <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} animate-in slide-in-from-bottom-2 duration-300`}>
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
-                  msg.role === "user" ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                  msg.role === "user" ? "bg-accent text-accent-foreground" : "bg-primary/20 text-primary ring-1 ring-primary/20"
                 }`}>
                   {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
                     msg.role === "user"
-                      ? "bg-accent/10 border border-accent/20 text-foreground rounded-tr-sm"
+                      ? "bg-accent text-accent-foreground rounded-tr-sm"
                       : "bg-card border border-border text-foreground rounded-tl-sm"
                   }`}
                 >
@@ -145,7 +145,7 @@ export function Chat() {
                   ]}
                 />
                  <div className="flex gap-3">
-                   <div className="h-8 w-8 rounded-full bg-primary/10 text-primary ring-1 ring-primary/20 flex items-center justify-center shrink-0">
+                   <div className="h-8 w-8 rounded-full bg-primary/20 text-primary ring-1 ring-primary/20 flex items-center justify-center shrink-0">
                      <Bot className="h-4 w-4" />
                    </div>
                    <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-10">
@@ -167,8 +167,8 @@ export function Chat() {
         <div ref={messagesEndRef} className="h-px" />
       </div>
 
-      <div className="p-4 bg-background/80 backdrop-blur-md border-t border-border/40">
-        <div className="relative flex items-center gap-2 p-1.5 bg-muted/40 border border-border/50 rounded-2xl focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all shadow-sm">
+      <div className="p-4 bg-background border-t border-border/40">
+        <div className="relative flex items-center gap-2 p-1.5 bg-muted border border-border/50 rounded-2xl focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all shadow-sm">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

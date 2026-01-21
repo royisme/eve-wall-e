@@ -1,18 +1,16 @@
 import { useState } from "react";
 import { WelcomeStep } from "./WelcomeStep";
 import { ConfigureStep } from "./ConfigureStep";
-import { PairingStep } from "./PairingStep";
 import { CompletedStep } from "./CompletedStep";
+import { setServerUrl } from "@/lib/auth";
 
-export type Step = "welcome" | "configure" | "pairing" | "completed";
+export type Step = "welcome" | "configure" | "completed";
 
 export interface OnboardingProps {
   onComplete: () => void;
 }
 
 interface ServerConfig {
-  serverHost: string;
-  serverPort: string;
   serverUrl: string;
   eveVersion?: string;
 }
@@ -25,21 +23,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     setStep("configure");
   };
 
-  const handleConfigureNext = (config: ServerConfig) => {
+  const handleConfigureNext = async (config: { serverUrl: string; eveVersion?: string }) => {
+    await setServerUrl(config.serverUrl);
     setServerConfig(config);
-    setStep("pairing");
+    setStep("completed");
   };
 
   const handleConfigureBack = () => {
     setStep("welcome");
-  };
-
-  const handlePairingNext = () => {
-    setStep("completed");
-  };
-
-  const handlePairingBack = () => {
-    setStep("configure");
   };
 
   const handleCompleted = () => {
@@ -57,20 +48,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           onBack={handleConfigureBack}
         />
       )}
-      {step === "pairing" && serverConfig && (
-        <PairingStep
-          serverUrl={serverConfig.serverUrl}
-          serverHost={serverConfig.serverHost}
-          serverPort={serverConfig.serverPort}
-          eveVersion={serverConfig.eveVersion}
-          onNext={handlePairingNext}
-          onBack={handlePairingBack}
-        />
-      )}
       {step === "completed" && serverConfig && (
         <CompletedStep
-          serverHost={serverConfig.serverHost}
-          serverPort={serverConfig.serverPort}
+          serverUrl={serverConfig.serverUrl}
           eveVersion={serverConfig.eveVersion}
           onComplete={handleCompleted}
         />

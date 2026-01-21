@@ -12,11 +12,11 @@ import { AnalyticsModal } from "@/components/AnalyticsModal";
 
 const getStatusConfig = (t: any) => ({
   inbox: { label: t('jobs.status.inbox'), variant: "secondary" as const, className: "bg-muted text-muted-foreground border-border" },
-  applied: { label: t('jobs.status.applied'), variant: "default" as const, className: "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20" },
-  interviewing: { label: t('jobs.status.interviewing'), variant: "outline" as const, className: "bg-accent/10 text-accent border-accent/20" },
-  offer: { label: t('jobs.status.offer'), variant: "default" as const, className: "bg-green-500/15 text-green-600 border-green-500/20 hover:bg-green-500/25" },
-  rejected: { label: t('jobs.status.rejected'), variant: "destructive" as const, className: "bg-destructive/10 text-destructive border-destructive/20" },
-  skipped: { label: t('jobs.status.skipped'), variant: "outline" as const, className: "bg-slate-500/10 text-slate-500 border-slate-500/20" },
+  applied: { label: t('jobs.status.applied'), variant: "default" as const, className: "bg-primary/20 text-primary hover:bg-primary/30 border-primary/20" },
+  interviewing: { label: t('jobs.status.interviewing'), variant: "outline" as const, className: "bg-accent/20 text-accent-foreground border-accent/20" },
+  offer: { label: t('jobs.status.offer'), variant: "default" as const, className: "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/20 hover:bg-green-500/25" },
+  rejected: { label: t('jobs.status.rejected'), variant: "destructive" as const, className: "bg-destructive/20 text-destructive border-destructive/20" },
+  skipped: { label: t('jobs.status.skipped'), variant: "outline" as const, className: "bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/20" },
 });
 
 export function JobsList() {
@@ -96,8 +96,8 @@ export function JobsList() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-muted/5">
-      <div className="p-4 border-b border-border/40 space-y-3 bg-background/80 backdrop-blur-md sticky top-0 z-10 transition-all">
+    <div className="h-full flex flex-col bg-muted/10">
+      <div className="p-4 border-b border-border/40 space-y-3 bg-background sticky top-0 z-10 transition-all">
         <div className="flex items-center gap-2">
           <div className="relative group flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
@@ -105,7 +105,7 @@ export function JobsList() {
               placeholder={t('jobs.searchPlaceholder')}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="pl-9 bg-muted/40 border-transparent focus:border-primary/30 focus:bg-background transition-all duration-300 rounded-xl"
+              className="pl-9 bg-muted border-transparent focus:border-primary/30 focus:bg-background transition-all duration-300 rounded-xl"
             />
           </div>
           <Button
@@ -165,7 +165,7 @@ export function JobsList() {
                 h-7 text-xs rounded-lg px-3 transition-all duration-300 border
                 ${statusFilter === status 
                   ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 border-primary" 
-                  : "bg-transparent border-transparent hover:bg-muted text-muted-foreground hover:text-foreground"}
+                  : "bg-background border-transparent hover:bg-muted text-muted-foreground hover:text-foreground"}
               `}
               onClick={() => setStatusFilter(status)}
             >
@@ -182,7 +182,7 @@ export function JobsList() {
           </div>
         ) : jobs.length === 0 ? (
           <div className="h-[50vh] flex flex-col items-center justify-center text-center text-muted-foreground space-y-4 animate-in fade-in zoom-in-95 duration-500">
-            <div className="h-16 w-16 rounded-2xl bg-muted/30 flex items-center justify-center border border-border/50">
+            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center border border-border/50">
               <Briefcase className="h-8 w-8 opacity-40" />
             </div>
             <p className="font-medium">{t('jobs.noResults')}</p>
@@ -191,10 +191,10 @@ export function JobsList() {
           jobs.map((job) => (
             <Card 
               key={job.id} 
-              className="cursor-pointer group relative overflow-hidden transition-all duration-300 border-border/40 hover:border-primary/30 hover:shadow-[0_4px_20px_-12px_rgba(96,165,250,0.3)] bg-card/50 backdrop-blur-sm"
+              className="cursor-pointer group relative overflow-hidden transition-all duration-300 border-border/40 hover:border-primary/30 hover:shadow-[0_4px_20px_-12px_rgba(96,165,250,0.3)] bg-card"
               onClick={() => setSelectedJobId(job.id)}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               <CardHeader className="p-3 pb-2 relative">
                 <div className="flex items-start justify-between gap-2">
@@ -205,7 +205,7 @@ export function JobsList() {
                   </div>
                   <div className="flex items-center gap-1">
                     {job.matchScore && (
-                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-primary/5 text-primary border-primary/10">
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-primary/20 text-primary border-primary/20">
                         {job.matchScore}% Match
                       </Badge>
                     )}
@@ -237,7 +237,7 @@ export function JobsList() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 opacity-0 group-hover:opacity-100 hover:bg-slate-500/10 hover:text-slate-500 rounded-md transition-all"
+                        className="h-6 px-2 opacity-0 group-hover:opacity-100 hover:bg-slate-500/20 hover:text-slate-500 rounded-md transition-all"
                         onClick={(e) => {
                           e.stopPropagation();
                           updateStatusMutation.mutate({ id: job.id, status: "skipped" });
@@ -259,7 +259,7 @@ export function JobsList() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary rounded-md transition-all"
+                        className="h-6 px-2 opacity-0 group-hover:opacity-100 hover:bg-primary/20 hover:text-primary rounded-md transition-all"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedJobId(job.id);

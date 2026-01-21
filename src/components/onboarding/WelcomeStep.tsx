@@ -12,7 +12,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
     <div className="flex flex-col items-center justify-center h-dvh px-6 py-8 animate-in fade-in duration-300">
       <div className="flex flex-col items-center gap-6 max-w-md text-center">
         {/* Icon */}
-        <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center ring-1 ring-primary/20">
+        <div className="h-20 w-20 rounded-2xl bg-primary/20 flex items-center justify-center ring-1 ring-primary/20">
           <span className="text-4xl">🤖</span>
         </div>
 

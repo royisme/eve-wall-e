@@ -9,10 +9,10 @@ import { JobsList } from "@/components/JobsList";
 import { ResumeLibrary } from "@/components/ResumeLibrary";
 import { Workspace } from "@/workspace/Workspace";
 import { Onboarding } from "@/components/onboarding";
-import { ReconnectPrompt } from "@/components/ReconnectPrompt";
 import { Toaster } from "@/components/ui/toaster";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { JobContextStrip } from "@/components/JobContextStrip";
 import { setToastCallback } from "@/lib/toast";
 import { handleApiError } from "@/lib/errors";
 import { useTranslation } from "react-i18next";
@@ -20,9 +20,9 @@ import { Loader2 } from "lucide-react";
 import { syncService } from "@/lib/sync/syncService";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { useAuth } from "@/hooks/useAuth";
+import { useJobDetection } from "@/hooks/useJobDetection";
 import { Button } from "@/components/ui/button";
 
-// Configure QueryClient with error handling and retry logic
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -41,6 +41,7 @@ function SidePanel() {
   const { t } = useTranslation();
   const { status } = useConnectionStatus();
   const { status: authStatus, clearAndRestart, retry } = useAuth();
+  const { detectedJob, isSaving, saveCurrentPage, dismissJob } = useJobDetection();
   const [activeTab, setActiveTab] = useState<TabId>("chat");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -52,14 +53,12 @@ function SidePanel() {
     setActiveTab(tab);
   };
 
-  // Setup toast callback for sync service
   useEffect(() => {
     setToastCallback((type: "success" | "error" | "info", message: string) => {
       window.dispatchEvent(new CustomEvent("wall-e-toast", { detail: { type, message, id: Date.now().toString(), timestamp: Date.now() } }));
     });
   }, []);
 
-  // Trigger sync when coming online
   useEffect(() => {
     if (status === "online") {
       console.log("[App] Connection online, triggering sync");
@@ -67,13 +66,12 @@ function SidePanel() {
     }
   }, [status]);
 
-  // Loading state - checking auth or validating (block rendering during validation)
   if (authStatus === "loading" || authStatus === "validating") {
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 animate-pulse">
-           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-             <Loader2 className="h-5 w-5 text-primary animate-spin" />
+           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20 text-primary">
+             <Loader2 className="h-5 w-5 animate-spin" />
            </div>
            <span className="text-sm font-medium text-muted-foreground tracking-wide">{t('common.loading')}</span>
         </div>
@@ -81,17 +79,34 @@ function SidePanel() {
     );
   }
 
-  // Not paired - show onboarding wizard
-  if (authStatus === "not_paired") {
+  if (authStatus === "not_configured") {
     return <Onboarding onComplete={() => window.location.reload()} />;
   }
 
-  // Token invalid - show reconnect prompt
-  if (authStatus === "invalid") {
-    return <ReconnectPrompt onReconnect={clearAndRestart} />;
+  if (authStatus === "offline") {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 max-w-md px-6 text-center">
+          <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center">
+            <span className="text-3xl">🔌</span>
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Eve is Offline</h1>
+          <p className="text-sm text-muted-foreground">
+            Cannot connect to Eve server. Make sure Eve is running.
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={retry} size="sm">
+              Retry Connection
+            </Button>
+            <Button onClick={clearAndRestart} variant="outline" size="sm">
+              Change Server
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // Error state - show error screen with retry button
   if (authStatus === "error") {
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
@@ -114,6 +129,15 @@ function SidePanel() {
   return (
     <div className="h-dvh flex flex-col bg-background selection:bg-primary/20">
       <Header onSettingsClick={() => setShowSettings(true)} />
+      <JobContextStrip
+        job={detectedJob}
+        onAnalyze={() => {
+          saveCurrentPage().then(() => setActiveTab("jobs"));
+        }}
+        onSave={saveCurrentPage}
+        onDismiss={dismissJob}
+        isAnalyzing={isSaving}
+      />
       <main className="flex-1 overflow-hidden relative z-0">
         {activeTab === "chat" && <Chat />}
         {activeTab === "jobs" && <JobsList />}
@@ -126,14 +150,12 @@ function SidePanel() {
   );
 }
 
-// Wrapper component that connects ErrorBoundary with React Query reset
 function AppErrorBoundary({ children }: { children: React.ReactNode }) {
   const { reset } = useQueryErrorResetBoundary();
 
   return (
     <ErrorBoundary
       onReset={() => {
-        // Clear query cache on error recovery
         queryClient.clear();
         reset();
       }}
@@ -146,7 +168,6 @@ function AppErrorBoundary({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Workspace with its own error boundary
 function WorkspaceWithErrorBoundary() {
   const { reset } = useQueryErrorResetBoundary();
 
@@ -162,7 +183,6 @@ function WorkspaceWithErrorBoundary() {
 }
 
 export function App() {
-  // Start sync service on App mount (global lifecycle)
   useEffect(() => {
     console.log("[App] Starting SyncService");
     syncService.startAutoSync();

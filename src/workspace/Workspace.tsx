@@ -118,10 +118,10 @@ export function Workspace() {
   const currentVersion = versions.find(v => v.id.toString() === activeVersionId);
 
   return (
-    <div className="h-dvh w-full flex flex-col bg-background/95 backdrop-blur-sm">
+    <div className="h-dvh w-full flex flex-col bg-background">
       <OfflineBanner />
       {/* Header */}
-      <header className="h-14 border-b border-border/40 flex items-center px-4 justify-between bg-background/80 backdrop-blur-md z-10 sticky top-0">
+      <header className="h-14 border-b border-border/40 flex items-center px-4 justify-between bg-background z-10 sticky top-0">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
             <h1 className="font-bold text-sm leading-tight truncate max-w-[300px]">{job?.title}</h1>
@@ -174,8 +174,8 @@ export function Workspace() {
       {/* Main Content - Split View */}
       <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
         {/* Left: Job Description */}
-        <div className="h-full flex flex-col border-r border-border/40 bg-muted/5 min-w-0">
-          <div className="px-4 py-2 border-b border-border/40 bg-muted/20 flex items-center justify-between">
+        <div className="h-full flex flex-col border-r border-border/40 bg-muted/10 min-w-0">
+          <div className="px-4 py-2 border-b border-border/40 bg-muted/30 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Job Description</span>
@@ -196,7 +196,7 @@ export function Workspace() {
         
         {/* Right: Resume Editor */}
         <div className="h-full flex flex-col min-w-0 bg-background">
-          <div className="px-4 py-2 border-b border-border/40 bg-muted/20 flex items-center justify-between">
+          <div className="px-4 py-2 border-b border-border/40 bg-muted/30 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileCode className="h-4 w-4 text-primary" />
               <span className="text-xs font-semibold uppercase tracking-wider text-primary">Tailored Resume (Markdown)</span>
@@ -206,14 +206,14 @@ export function Workspace() {
           
           {/* Suggestions Panel (Collapsible or Top Banner) */}
           {currentVersion?.suggestions && currentVersion.suggestions.length > 0 && (
-            <div className="bg-primary/5 border-b border-primary/10 p-3">
+            <div className="bg-primary/10 border-b border-primary/20 p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Wand2 className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-bold text-primary">AI Suggestions</span>
               </div>
               <ul className="space-y-1">
                 {currentVersion.suggestions.map((suggestion, idx) => (
-                  <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
+                  <li key={idx} className="text-xs text-foreground flex items-start gap-2">
                     <span className="mt-0.5">•</span>
                     <span>{suggestion}</span>
                   </li>
@@ -226,7 +226,7 @@ export function Workspace() {
             <ErrorBoundary
               fallback={
                 <Textarea
-                  className="flex-1 h-full font-mono text-sm resize-none border-0 focus-visible:ring-0 p-6 leading-relaxed bg-transparent selection:bg-primary/20 scrollbar-thin rounded-none"
+                  className="flex-1 h-full font-mono text-sm resize-none border-0 focus-visible:ring-0 p-6 leading-relaxed bg-background selection:bg-primary/20 scrollbar-thin rounded-none"
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
                   placeholder="Tailored resume content will appear here..."
@@ -242,7 +242,7 @@ export function Workspace() {
             </ErrorBoundary>
           </div>
 
-          <div className="p-4 border-t border-border/40 bg-muted/5">
+          <div className="p-4 border-t border-border/40 bg-muted/10">
             <PdfBuilder
               markdown={content}
               filename={`${job?.title}-${job?.company}`}

@@ -1,185 +1,70 @@
-// Token management and authentication utilities
 import { endpoints, buildUrl } from "./endpoints";
 
 const AUTH_HEADER = "x-eve-token";
+const DEFAULT_SERVER_URL = "http://localhost:3033";
+const STORAGE_KEY_SERVER_URL = "serverUrl";
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  token: string | null;
-  serverHost: string;
-  serverPort: string;
-  serverUrl: string;
-  pairedAt: number | null;
-  eveVersion?: string;
+export function getExtensionId(): string {
+  if (typeof chrome !== "undefined" && chrome.runtime?.id) {
+    return chrome.runtime.id;
+  }
+  return "dev-extension-id";
 }
 
-export interface AuthStorage {
-  authToken?: string;
-  serverHost?: string;
-  serverPort?: string;
-  pairedAt?: number;
-  eveVersion?: string;
+export async function getAuthToken(): Promise<string> {
+  return getExtensionId();
 }
 
-const DEFAULT_HOST = "localhost";
-const DEFAULT_PORT = "3033";
-
-// Get stored auth information
-export async function getStoredAuth(): Promise<AuthState | null> {
+export async function getServerUrl(): Promise<string> {
   if (typeof chrome !== "undefined" && chrome.storage) {
     return new Promise((resolve) => {
-      chrome.storage.local.get(
-        ["authToken", "serverHost", "serverPort", "pairedAt", "eveVersion"],
-        (result: AuthStorage) => {
-          if (!result.authToken) {
-            resolve(null);
-            return;
-          }
-
-          const host = result.serverHost || DEFAULT_HOST;
-          const port = result.serverPort || DEFAULT_PORT;
-
-          resolve({
-            isAuthenticated: true,
-            token: result.authToken,
-            serverHost: host,
-            serverPort: port,
-            serverUrl: `http://${host}:${port}`,
-            pairedAt: result.pairedAt || null,
-            eveVersion: result.eveVersion,
-          });
-        }
-      );
+      chrome.storage.local.get([STORAGE_KEY_SERVER_URL], (result: { [key: string]: string | undefined }) => {
+        resolve(result[STORAGE_KEY_SERVER_URL] || DEFAULT_SERVER_URL);
+      });
     });
   }
-  return null;
+  return DEFAULT_SERVER_URL;
 }
 
-// Save auth information to storage
-export async function saveAuth(data: {
-  token: string;
-  serverHost: string;
-  serverPort: string;
-  eveVersion?: string;
-}): Promise<void> {
+export async function setServerUrl(url: string): Promise<void> {
   if (typeof chrome !== "undefined" && chrome.storage) {
     return new Promise((resolve) => {
-      chrome.storage.local.set(
-        {
-          authToken: data.token,
-          serverHost: data.serverHost,
-          serverPort: data.serverPort,
-          pairedAt: Date.now(),
-          eveVersion: data.eveVersion,
-        },
-        () => resolve()
-      );
-    });
-  }
-  throw new Error("chrome.storage not available: cannot save auth");
-}
-
-// Clear auth information
-export async function clearAuth(): Promise<void> {
-  if (typeof chrome !== "undefined" && chrome.storage) {
-    return new Promise((resolve) => {
-      chrome.storage.local.remove(["authToken", "serverHost", "serverPort", "pairedAt", "eveVersion"], () => resolve());
+      chrome.storage.local.set({ [STORAGE_KEY_SERVER_URL]: url }, () => resolve());
     });
   }
 }
 
-// Verify token validity by calling Eve API
-export async function verifyToken(serverUrl: string, token: string): Promise<boolean> {
+export async function verifyConnection(serverUrl: string): Promise<{ ok: boolean; version?: string }> {
   try {
-    const response = await fetch(buildUrl(serverUrl, endpoints.auth.verify), {
+    const response = await fetch(buildUrl(serverUrl, endpoints.health), {
       method: "GET",
-      headers: {
-        [AUTH_HEADER]: token,
-        "Content-Type": "application/json",
-      },
+      signal: AbortSignal.timeout(5000),
     });
 
-    return response.ok;
-  } catch (error) {
-    console.error("Token verification failed:", error);
-    return false;
-  }
-}
-
-// Request pairing from Eve API
-export interface PairingResponse {
-  success: boolean;
-  token?: string;
-  error?: string;
-  conflict?: boolean;
-}
-
-export async function requestPairing(serverUrl: string, oldToken?: string): Promise<PairingResponse> {
-  try {
-    const body: Record<string, string> = {};
-    if (oldToken) {
-      body.oldToken = oldToken;
+    if (!response.ok) {
+      return { ok: false };
     }
-
-    const response = await fetch(buildUrl(serverUrl, endpoints.auth.pair), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
 
     const data = await response.json();
-
-    if (response.ok && data.token) {
-      return {
-        success: true,
-        token: data.token,
-      };
-    }
-
-    return {
-      success: false,
-      error: data.message || "Pairing failed",
-      conflict: response.status === 409,
-    };
-  } catch (error) {
-    console.error("Pairing request failed:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Connection failed",
-    };
+    return { ok: true, version: data.version };
+  } catch {
+    return { ok: false };
   }
 }
 
-// Get auth token for API calls
-export async function getAuthToken(): Promise<string | null> {
-  if (typeof chrome !== "undefined" && chrome.storage) {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(["authToken"], (result: { authToken?: string }) => {
-        resolve(result.authToken || null);
-      });
-    });
+export async function isConfigured(): Promise<boolean> {
+  const serverUrl = await getServerUrl();
+  if (!serverUrl || serverUrl === DEFAULT_SERVER_URL) {
+    return false;
   }
-  return null;
+  const result = await verifyConnection(serverUrl);
+  return result.ok;
 }
 
-// Get server URL from stored settings
-export async function getServerUrl(): Promise<string> {
-  const auth = await getStoredAuth();
-  if (auth && auth.serverUrl) {
-    return auth.serverUrl;
-  }
-
-  // Fallback to old settings format
+export async function clearConfig(): Promise<void> {
   if (typeof chrome !== "undefined" && chrome.storage) {
     return new Promise((resolve) => {
-      chrome.storage.local.get(["serverPort"], (result: { serverPort?: string }) => {
-        const port = result.serverPort || DEFAULT_PORT;
-        resolve(`http://${DEFAULT_HOST}:${port}`);
-      });
+      chrome.storage.local.remove([STORAGE_KEY_SERVER_URL], () => resolve());
     });
   }
-
-  return `http://${DEFAULT_HOST}:${DEFAULT_PORT}`;
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { createTimeoutSignal } from "@/lib/utils";
+import { getServerUrl } from "@/lib/auth";
+import { endpoints, buildUrl } from "@/lib/endpoints";
 
 export type ConnectionStatus = "online" | "offline" | "reconnecting";
 
@@ -10,7 +11,6 @@ export function useConnectionStatus() {
   const checkTimeoutRef = useRef<number | null>(null);
 
   const checkConnection = useCallback(async () => {
-    // Don't check if a check is already in progress
     if (checkTimeoutRef.current) return;
 
     try {
@@ -18,24 +18,15 @@ export function useConnectionStatus() {
         checkTimeoutRef.current = null;
       }, 5000);
 
-      // Check network availability
       const isOnline = navigator.onLine;
-
-      // Also verify by pinging Eve backend
       let eveReachable = isOnline;
+
       if (isOnline) {
         try {
-          const { serverPort } = await new Promise<{ serverPort?: string }>((resolve) => {
-            if (typeof chrome !== "undefined" && chrome.storage) {
-              chrome.storage.local.get(["serverPort"], (result) => resolve(result as { serverPort?: string }));
-            } else {
-              resolve({ serverPort: "3033" });
-            }
-          });
-
-          const response = await fetch(`http://localhost:${serverPort}/health`, {
+          const serverUrl = await getServerUrl();
+          const response = await fetch(buildUrl(serverUrl, endpoints.health), {
             method: "GET",
-            signal: createTimeoutSignal(5000),
+            signal: AbortSignal.timeout(5000),
           }).catch(() => ({ ok: false }));
 
           eveReachable = response.ok;

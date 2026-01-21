@@ -31,11 +31,11 @@ interface JobDetailDrawerProps {
 
 const getStatusConfig = (t: any) => ({
   inbox: { label: t("jobs.status.inbox"), className: "bg-muted text-muted-foreground" },
-  applied: { label: t("jobs.status.applied"), className: "bg-primary/10 text-primary" },
-  interviewing: { label: t("jobs.status.interviewing"), className: "bg-accent/10 text-accent" },
-  offer: { label: t("jobs.status.offer"), className: "bg-green-500/15 text-green-600" },
-  rejected: { label: t("jobs.status.rejected"), className: "bg-destructive/10 text-destructive" },
-  skipped: { label: t("jobs.status.skipped"), className: "bg-slate-500/10 text-slate-500" },
+  applied: { label: t("jobs.status.applied"), className: "bg-primary/20 text-primary" },
+  interviewing: { label: t("jobs.status.interviewing"), className: "bg-accent/20 text-accent-foreground" },
+  offer: { label: t("jobs.status.offer"), className: "bg-green-500/20 text-green-700 dark:text-green-400" },
+  rejected: { label: t("jobs.status.rejected"), className: "bg-destructive/20 text-destructive" },
+  skipped: { label: t("jobs.status.skipped"), className: "bg-slate-500/20 text-slate-600 dark:text-slate-400" },
 });
 
 export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
@@ -112,7 +112,7 @@ export function JobDetailDrawer({ jobId, onClose }: JobDetailDrawerProps) {
 
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col animate-in slide-in-from-right duration-300">
-      <div className="p-4 border-b border-border/40 flex items-center justify-between bg-background/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="p-4 border-b border-border/40 flex items-center justify-between bg-background sticky top-0 z-10">
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4 mr-2" />
           {t('jobDetail.back')}

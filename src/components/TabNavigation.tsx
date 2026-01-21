@@ -19,7 +19,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   ];
 
   return (
-    <nav className="flex items-center justify-around border-t border-border/30 bg-background/80 backdrop-blur-md h-[72px] pb-safe px-2 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] z-20">
+    <nav className="flex items-center justify-around border-t border-border/30 bg-background h-[72px] pb-safe px-2 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)] z-20">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -31,11 +31,11 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
               "relative flex-1 flex flex-col items-center justify-center gap-1.5 h-12 rounded-2xl transition-all duration-300 ease-out group overflow-hidden",
               isActive
                 ? "text-primary"
-                : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             )}
           >
             {isActive && (
-              <div className="absolute inset-0 bg-primary/5 rounded-2xl" />
+              <div className="absolute inset-0 bg-primary/10 rounded-2xl" />
             )}
             
             <Icon 

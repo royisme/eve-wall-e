@@ -17,7 +17,7 @@ export function useEveChat() {
 export function useEveHealth() {
   return useQuery({
     queryKey: ["eve", "health"],
-    queryFn: getHealth,
+    queryFn: () => getHealth(),
     retry: 1,
     staleTime: 30000,
   });

@@ -7,7 +7,7 @@ import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { HealthResponse } from "@/lib/api";
 
 interface ConfigureStepProps {
-  onNext: (config: { serverHost: string; serverPort: string; serverUrl: string; eveVersion?: string }) => void;
+  onNext: (config: { serverUrl: string; eveVersion?: string }) => void;
   onBack: () => void;
 }
 
@@ -15,17 +15,21 @@ type ConnectionState = "idle" | "testing" | "success" | "error";
 
 export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
   const { t } = useTranslation();
-  const [serverHost, setServerHost] = useState("localhost");
-  const [serverPort, setServerPort] = useState("3033");
+  const [serverUrl, setServerUrl] = useState("http://localhost:3033");
   const [connectionState, setConnectionState] = useState<ConnectionState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [eveVersion, setEveVersion] = useState<string | undefined>();
 
-  const serverUrl = `http://${serverHost}:${serverPort}`;
-
   const testConnection = async () => {
     setConnectionState("testing");
     setErrorMessage("");
+
+    let urlToTest = serverUrl.trim();
+    if (!urlToTest.startsWith("http://") && !urlToTest.startsWith("https://")) {
+      if (urlToTest.includes("localhost") || urlToTest.includes("127.0.0.1")) {
+        urlToTest = `http://${urlToTest}`;
+      }
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
@@ -35,7 +39,11 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
     }, 5000);
 
     try {
-      const response = await fetch(`${serverUrl}/health`, {
+      new URL(urlToTest); 
+
+      const baseUrl = urlToTest.replace(/\/$/, "");
+      
+      const response = await fetch(`${baseUrl}/health`, {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -47,12 +55,15 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
       const data: HealthResponse = await response.json();
       setEveVersion(data.version);
       setConnectionState("success");
+      setServerUrl(baseUrl);
     } catch (error) {
       clearTimeout(timeoutId);
       console.error("Connection test failed:", error);
 
       if (error instanceof Error && error.name === "AbortError") {
         setErrorMessage(t("onboarding.configure.connectionTimedOut"));
+      } else if (error instanceof TypeError) {
+         setErrorMessage("Invalid URL format");
       } else {
         setErrorMessage(error instanceof Error ? error.message : t("onboarding.configure.connectionFailed"));
       }
@@ -68,7 +79,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
       <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
         <div className="flex flex-col gap-6 w-full text-center">
           {/* Icon */}
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center ring-1 ring-primary/20 self-center">
+          <div className="h-16 w-16 rounded-2xl bg-primary/20 flex items-center justify-center ring-1 ring-primary/20 self-center">
             <span className="text-3xl">🔗</span>
           </div>
 
@@ -85,35 +96,19 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
 
         {/* Form */}
         <div className="w-full space-y-4 mt-8">
-          {/* Server Address */}
           <div className="space-y-2">
-            <Label htmlFor="serverHost">{t("onboarding.configure.serverAddress")}</Label>
+            <Label htmlFor="serverUrl">Eve Server URL</Label>
             <Input
-              id="serverHost"
-              value={serverHost}
+              id="serverUrl"
+              value={serverUrl}
               onChange={(e) => {
-                setServerHost(e.target.value);
+                setServerUrl(e.target.value);
                 setConnectionState("idle");
                 setEveVersion(undefined);
               }}
-              placeholder="localhost"
-              className="h-11"
-            />
-          </div>
-
-          {/* Port */}
-          <div className="space-y-2">
-            <Label htmlFor="serverPort">{t("onboarding.configure.port")}</Label>
-            <Input
-              id="serverPort"
-              value={serverPort}
-              onChange={(e) => {
-                setServerPort(e.target.value);
-                setConnectionState("idle");
-                setEveVersion(undefined);
-              }}
-              placeholder="3033"
-              className="h-11"
+              placeholder="http://localhost:3033"
+              className="h-11 font-mono text-sm"
+              autoComplete="url"
             />
           </div>
 
@@ -121,10 +116,10 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
           {connectionState !== "idle" && (
             <div className={`flex items-center gap-2 p-3 rounded-xl border ${
               connectionState === "success"
-                ? "bg-success/10 border-success/20 text-success"
+                ? "bg-success/20 border-success/20 text-success"
                 : connectionState === "testing"
                   ? "bg-muted border-muted-foreground/20 text-muted-foreground"
-                  : "bg-destructive/10 border-destructive/20 text-destructive"
+                  : "bg-destructive/20 border-destructive/20 text-destructive"
             }`}>
               {connectionState === "testing" && (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -144,7 +139,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
           )}
 
           {/* Hint */}
-          <div className="bg-muted/50 rounded-xl p-3 text-left">
+          <div className="bg-muted rounded-xl p-3 text-left">
             <div className="flex items-start gap-2">
               <span className="text-lg">💡</span>
               <p className="text-xs text-muted-foreground">
@@ -168,7 +163,19 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
           variant={canContinue ? "default" : "secondary"}
           onClick={() => {
             if (canContinue) {
-              onNext({ serverHost, serverPort, serverUrl, eveVersion });
+              try {
+                const url = new URL(serverUrl);
+                const cleanUrl = url.origin + (url.pathname === '/' ? '' : url.pathname).replace(/\/$/, "");
+                
+                onNext({ 
+                  serverUrl: cleanUrl, 
+                  eveVersion 
+                });
+              } catch (e) {
+                console.error("Invalid URL structure", e);
+                setErrorMessage("Invalid URL structure");
+                setConnectionState("error");
+              }
             } else {
               testConnection();
             }
