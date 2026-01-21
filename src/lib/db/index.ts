@@ -149,7 +149,7 @@ export async function clearAll(): Promise<void> {
 // Generic get/put for settings and other simple stores
 export async function get<T>(storeName: string, key: string): Promise<T | undefined> {
   try {
-    const db = await initDB();
+    await initDB();
     // For settings, we use the jobs store as a workaround since we don't have a dedicated settings store
     // In a real implementation, you'd add a 'settings' store to the schema
     const stored = localStorage.getItem(`wall-e:${storeName}:${key}`);

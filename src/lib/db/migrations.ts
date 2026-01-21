@@ -1,6 +1,3 @@
-import { type WallEDB } from "./schema";
-import { initDB } from "./schema";
-
 export async function migrate(db: IDBDatabase, oldVersion: number | null, newVersion: number) {
   console.log(`[Migration] v${oldVersion} -> v${newVersion}`);
 

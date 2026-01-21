@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { Toast } from "./toast";
-import { cn } from "@/lib/utils";
 
 interface ToastItem {
   id: string;

@@ -9,10 +9,10 @@ interface ReconnectPromptProps {
 export function ReconnectPrompt({ onReconnect }: ReconnectPromptProps) {
   const { t } = useTranslation();
 
-  const reasons = [
-    "Eve server was restarted",
-    "Another device paired with Eve",
-    "Token was manually revoked",
+  const reasonKeys = [
+    "reconnect.reasons.serverRestarted",
+    "reconnect.reasons.anotherDevice",
+    "reconnect.reasons.tokenRevoked",
   ];
 
   return (
@@ -26,24 +26,24 @@ export function ReconnectPrompt({ onReconnect }: ReconnectPromptProps) {
 
           {/* Title */}
           <h1 className="text-xl font-bold text-foreground">
-            Connection Lost
+            {t("reconnect.title")}
           </h1>
 
           {/* Description */}
           <p className="text-sm text-muted-foreground">
-            Your session with Eve has expired or become invalid.
+            {t("reconnect.description")}
           </p>
 
           {/* Reasons */}
           <div className="w-full text-left">
             <p className="text-xs text-muted-foreground mb-2">
-              This can happen if:
+              {t("reconnect.reasons.intro")}
             </p>
             <ul className="space-y-1">
-              {reasons.map((reason, index) => (
+              {reasonKeys.map((key, index) => (
                 <li key={index} className="flex items-start gap-2 text-sm text-foreground">
                   <span className="text-muted-foreground">•</span>
-                  <span>{reason}</span>
+                  <span>{t(key)}</span>
                 </li>
               ))}
             </ul>
@@ -54,7 +54,7 @@ export function ReconnectPrompt({ onReconnect }: ReconnectPromptProps) {
       {/* Reconnect Button */}
       <div className="max-w-md mx-auto w-full">
         <Button onClick={onReconnect} size="lg" className="w-full">
-          Reconnect
+          {t("reconnect.button")}
         </Button>
       </div>
     </div>

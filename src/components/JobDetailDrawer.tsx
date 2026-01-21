@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { eveApi, type JobStatus, type Job } from "@/lib/api";
+import { eveApi, type JobStatus } from "@/lib/api";
 import { PdfBuilder } from "@/components/PdfBuilder";
 
 interface JobDetailDrawerProps {

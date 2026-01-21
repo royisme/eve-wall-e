@@ -20,6 +20,7 @@ import { Loader2 } from "lucide-react";
 import { syncService } from "@/lib/sync/syncService";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 // Configure QueryClient with error handling and retry logic
 const queryClient = new QueryClient({
@@ -39,7 +40,7 @@ const queryClient = new QueryClient({
 function SidePanel() {
   const { t } = useTranslation();
   const { status } = useConnectionStatus();
-  const { status: authStatus, clearAndRestart } = useAuth();
+  const { status: authStatus, clearAndRestart, retry } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>("chat");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -66,8 +67,8 @@ function SidePanel() {
     }
   }, [status]);
 
-  // Loading state - checking auth
-  if (authStatus === "loading") {
+  // Loading state - checking auth or validating (block rendering during validation)
+  if (authStatus === "loading" || authStatus === "validating") {
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 animate-pulse">
@@ -88,6 +89,22 @@ function SidePanel() {
   // Token invalid - show reconnect prompt
   if (authStatus === "invalid") {
     return <ReconnectPrompt onReconnect={clearAndRestart} />;
+  }
+
+  // Error state - show error screen with retry button
+  if (authStatus === "error") {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 max-w-md px-6">
+          <span className="text-sm text-muted-foreground">
+            Something went wrong
+          </span>
+          <Button onClick={retry} size="sm">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (showSettings) {

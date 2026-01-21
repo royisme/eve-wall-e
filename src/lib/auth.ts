@@ -1,5 +1,5 @@
 // Token management and authentication utilities
-import { getBaseUrl } from "./api";
+import { endpoints, buildUrl } from "./endpoints";
 
 const AUTH_HEADER = "x-eve-token";
 
@@ -76,6 +76,7 @@ export async function saveAuth(data: {
       );
     });
   }
+  throw new Error("chrome.storage not available: cannot save auth");
 }
 
 // Clear auth information
@@ -90,7 +91,7 @@ export async function clearAuth(): Promise<void> {
 // Verify token validity by calling Eve API
 export async function verifyToken(serverUrl: string, token: string): Promise<boolean> {
   try {
-    const response = await fetch(`${serverUrl}/auth/verify`, {
+    const response = await fetch(buildUrl(serverUrl, endpoints.auth.verify), {
       method: "GET",
       headers: {
         [AUTH_HEADER]: token,
@@ -120,7 +121,7 @@ export async function requestPairing(serverUrl: string, oldToken?: string): Prom
       body.oldToken = oldToken;
     }
 
-    const response = await fetch(`${serverUrl}/auth/pair`, {
+    const response = await fetch(buildUrl(serverUrl, endpoints.auth.pair), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

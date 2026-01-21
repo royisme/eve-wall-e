@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SettingsSection, SettingsDivider } from "@/components/SettingsSection";
 import { useTranslation } from "react-i18next";
@@ -124,7 +123,7 @@ export function Settings({ onSave }: SettingsProps) {
       await clearAll();
       toast("success", t("settings.cacheCleared"));
       setPendingActions(0);
-    } catch (error) {
+    } catch {
       toast("error", "Failed to clear cache");
     } finally {
       setIsClearing(false);
@@ -136,7 +135,7 @@ export function Settings({ onSave }: SettingsProps) {
     try {
       await eveApi.syncJobs();
       toast("success", t("settings.syncComplete"));
-    } catch (error) {
+    } catch {
       toast("error", "Sync failed");
     } finally {
       setIsSyncing(false);

@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonCircle, SkeletonText } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";

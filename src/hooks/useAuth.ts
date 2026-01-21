@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getStoredAuth, verifyToken, clearAuth, getServerUrl } from "@/lib/auth";
+import { getStoredAuth, verifyToken, clearAuth } from "@/lib/auth";
 
 export type AuthStatus =
   | "loading"       // Initial check in progress
@@ -40,6 +40,19 @@ export function useAuth() {
     }
   }, []);
 
+  // Listen for auth errors from API calls (e.g., 401 responses)
+  useEffect(() => {
+    const handleAuthError = () => {
+      console.log("[useAuth] Received auth-error event, transitioning to invalid state");
+      setStatus("invalid");
+    };
+
+    window.addEventListener("auth-error", handleAuthError);
+    return () => {
+      window.removeEventListener("auth-error", handleAuthError);
+    };
+  }, []);
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -48,7 +61,7 @@ export function useAuth() {
     checkAuth();
   }, [checkAuth]);
 
-  const clearAnd = useCallback(async () => {
+  const clearAndRestart = useCallback(async () => {
     await clearAuth();
     setStatus("not_paired");
     setServerUrl(null);
@@ -63,7 +76,7 @@ export function useAuth() {
     status,
     serverUrl,
     retry,
-    clearAndRestart: clearAnd,
+    clearAndRestart,
     setAuthenticated,
   };
 }

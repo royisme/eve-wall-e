@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export function OfflineBanner() {
   const { t } = useTranslation();
-  const { status, lastChecked } = useConnectionStatus();
+  const { status } = useConnectionStatus();
   const [pendingCount, setPendingCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 

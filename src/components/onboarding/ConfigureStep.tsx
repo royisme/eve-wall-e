@@ -27,8 +27,19 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
     setConnectionState("testing");
     setErrorMessage("");
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      setErrorMessage(t("onboarding.configure.connectionTimedOut"));
+      setConnectionState("error");
+    }, 5000);
+
     try {
-      const response = await fetch(`${serverUrl}/health`);
+      const response = await fetch(`${serverUrl}/health`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}`);
       }
@@ -37,8 +48,14 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
       setEveVersion(data.version);
       setConnectionState("success");
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Connection test failed:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Connection failed");
+
+      if (error instanceof Error && error.name === "AbortError") {
+        setErrorMessage(t("onboarding.configure.connectionTimedOut"));
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : t("onboarding.configure.connectionFailed"));
+      }
       setConnectionState("error");
     }
   };
@@ -57,12 +74,12 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
 
           {/* Title */}
           <h1 className="text-xl font-bold text-foreground">
-            Connect to Eve
+            {t("onboarding.configure.title")}
           </h1>
 
           {/* Subtitle */}
           <p className="text-sm text-muted-foreground">
-            Make sure Eve is running on your computer.
+            {t("onboarding.configure.subtitle")}
           </p>
         </div>
 
@@ -70,7 +87,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
         <div className="w-full space-y-4 mt-8">
           {/* Server Address */}
           <div className="space-y-2">
-            <Label htmlFor="serverHost">Server Address</Label>
+            <Label htmlFor="serverHost">{t("onboarding.configure.serverAddress")}</Label>
             <Input
               id="serverHost"
               value={serverHost}
@@ -86,7 +103,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
 
           {/* Port */}
           <div className="space-y-2">
-            <Label htmlFor="serverPort">Port</Label>
+            <Label htmlFor="serverPort">{t("onboarding.configure.port")}</Label>
             <Input
               id="serverPort"
               value={serverPort}
@@ -119,8 +136,8 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
                 <AlertCircle className="h-4 w-4" />
               )}
               <span className="text-sm">
-                {connectionState === "testing" && "Testing connection..."}
-                {connectionState === "success" && `Connected to Eve ${eveVersion || ""}`}
+                {connectionState === "testing" && t("onboarding.configure.testingConnection")}
+                {connectionState === "success" && `${t("onboarding.configure.connected")} ${eveVersion || ""}`}
                 {connectionState === "error" && errorMessage}
               </span>
             </div>
@@ -131,7 +148,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
             <div className="flex items-start gap-2">
               <span className="text-lg">💡</span>
               <p className="text-xs text-muted-foreground">
-                Run <code className="px-1.5 py-0.5 bg-background rounded font-mono">bun run serve</code> in Eve directory to start server
+                {t("onboarding.configure.hint")}
               </p>
             </div>
           </div>
@@ -145,7 +162,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
           onClick={onBack}
           className="flex-1"
         >
-          Back
+          {t("onboarding.configure.back")}
         </Button>
         <Button
           variant={canContinue ? "default" : "secondary"}
@@ -162,7 +179,7 @@ export function ConfigureStep({ onNext, onBack }: ConfigureStepProps) {
           {connectionState === "testing" && (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           )}
-          {canContinue ? "Continue" : "Test"}
+          {canContinue ? t("onboarding.configure.continue") : t("onboarding.configure.testConnection")}
         </Button>
       </div>
     </div>

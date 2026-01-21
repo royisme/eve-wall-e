@@ -18,22 +18,22 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
 
         {/* Title */}
         <h1 className="text-2xl font-bold text-foreground">
-          Wall-E
+          {t("onboarding.welcome.title")}
         </h1>
 
         {/* Subtitle */}
         <p className="text-base text-muted-foreground">
-          Your AI-Powered Job Hunting Copilot
+          {t("onboarding.welcome.subtitle")}
         </p>
 
         {/* Description */}
         <p className="text-sm text-muted-foreground">
-          Wall-E connects to Eve, your local AI assistant, to help you manage job applications.
+          {t("onboarding.welcome.description")}
         </p>
 
         {/* Action Button */}
         <Button onClick={onNext} size="lg" className="w-full mt-4">
-          Get Started
+          {t("onboarding.welcome.cta")}
         </Button>
       </div>
     </div>

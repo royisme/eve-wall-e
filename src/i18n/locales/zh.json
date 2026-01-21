@@ -192,7 +192,7 @@
       "title": "Wall-E",
       "subtitle": "你的 AI 驱动求职助手",
       "description": "Wall-E 连接到 Eve，你的本地 AI 助手，帮助你管理求职申请。",
-      "getStarted": "开始使用"
+      "cta": "开始使用"
     },
     "configure": {
       "title": "连接到 Eve",
@@ -202,6 +202,8 @@
       "testConnection": "测试",
       "continue": "继续",
       "connected": "已连接到 Eve",
+      "connectionTimedOut": "连接超时",
+      "connectionFailed": "连接失败",
       "hint": "在 Eve 目录中运行 `bun run serve` 启动服务器",
       "testingConnection": "测试连接中...",
       "back": "返回"
@@ -223,8 +225,7 @@
       "server": "服务器",
       "version": "Eve 版本",
       "paired": "配对时间",
-      "justNow": "刚刚",
-      "startUsing": "开始使用"
+      "startButton": "开始使用"
     }
   },
   "reconnect": {

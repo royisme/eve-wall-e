@@ -1,38 +1,54 @@
+import { endpoints, buildUrl } from "./endpoints";
+
 const DEFAULT_PORT = 3033;
 
 // Custom auth header for Eve API
 const AUTH_HEADER = "x-eve-token";
 
-type StorageResult = { serverPort?: string; authToken?: string };
+// Import auth functions from auth.ts (dynamic import to avoid circular dependency)
+let getAuthTokenFn: () => Promise<string | null>;
+let getBaseUrlFn: () => Promise<string>;
 
-async function getAuthToken(): Promise<string | null> {
-  if (typeof chrome !== "undefined" && chrome.storage) {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(["authToken"], (result: StorageResult) => {
-        resolve(result.authToken || null);
+import("@/lib/auth").then((module: any) => {
+  getAuthTokenFn = module.getAuthToken;
+  getBaseUrlFn = module.getServerUrl;
+}).catch(() => {
+  // Fallback if auth module fails to load
+  console.warn("[api.ts] Failed to import auth module, using fallback");
+  getAuthTokenFn = async () => {
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      return new Promise((resolve) => {
+        chrome.storage.local.get(["authToken"], (result: { authToken?: string }) => {
+          resolve(result.authToken || null);
+        });
       });
-    });
-  }
-  return null;
+    }
+    return null;
+  };
+  getBaseUrlFn = async () => {
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      return new Promise((resolve) => {
+        chrome.storage.local.get(["serverPort"], (result: { serverPort?: string }) => {
+          const port = result.serverPort || DEFAULT_PORT;
+          resolve(`http://localhost:${port}`);
+        });
+      });
+    }
+    return `http://localhost:${DEFAULT_PORT}`;
+  };
+});
+
+export function getAuthToken(): Promise<string | null> {
+  return getAuthTokenFn();
 }
 
-async function getBaseUrl(): Promise<string> {
-  if (typeof chrome !== "undefined" && chrome.storage) {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(["serverPort"], (result: StorageResult) => {
-        const port = result.serverPort || DEFAULT_PORT;
-        resolve(`http://localhost:${port}`);
-      });
-    });
-  }
-  return `http://localhost:${DEFAULT_PORT}`;
+export function getBaseUrl(): Promise<string> {
+  return getBaseUrlFn();
 }
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
-  const headers: Record<string, string> = {
-    ...(token ? { [AUTH_HEADER]: token } : {}),
-  };
+  const headers: Record<string, string> = token ? { [AUTH_HEADER]: token } : {};
 
   // Don't set Content-Type for FormData - let browser set it with boundary
   if (!(options.body instanceof FormData)) {
@@ -235,7 +251,7 @@ export interface CreateJobRequest {
 
 export async function chat(request: ChatRequest): Promise<ChatResponse> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/chat`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.chat), {
     method: "POST",
     body: JSON.stringify(request),
   });
@@ -244,14 +260,14 @@ export async function chat(request: ChatRequest): Promise<ChatResponse> {
 
 export async function getHealth(baseUrl?: string): Promise<HealthResponse> {
   const url = baseUrl || await getBaseUrl();
-  const res = await fetch(`${url}/health`);
+  const res = await fetch(buildUrl(url, endpoints.health));
   if (!res.ok) throw new Error(`Eve API error: ${res.status}`);
   return res.json();
 }
 
 export async function getAgentStatus(): Promise<AgentStatusResponse> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/agent/status`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.agent.status));
   return res.json();
 }
 
@@ -270,20 +286,20 @@ export async function getJobs(params?: {
   if (params?.limit) query.set("limit", String(params.limit));
   if (params?.offset) query.set("offset", String(params.offset));
   if (params?.search) query.set("search", params.search);
-  
-  const res = await fetchWithAuth(`${baseUrl}/jobs?${query}`);
+
+  const res = await fetchWithAuth(`${buildUrl(baseUrl, endpoints.jobs.list)}?${query}`);
   return res.json();
 }
 
 export async function getJobStats(): Promise<JobStats> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/jobs/stats`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.stats));
   return res.json();
 }
 
 export async function updateJob(id: number, data: { status?: JobStatus; starred?: boolean }): Promise<{ job: Job }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/jobs/${id}`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.byId(id)), {
     method: "PATCH",
     body: JSON.stringify(data),
   });
@@ -292,7 +308,7 @@ export async function updateJob(id: number, data: { status?: JobStatus; starred?
 
 export async function starJob(id: number, starred: boolean): Promise<{ job: Job }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/jobs/${id}/star`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.star(id)), {
     method: "POST",
     body: JSON.stringify({ starred }),
   });
@@ -308,11 +324,9 @@ export async function syncJobs(onProgress?: (synced: number, total: number) => v
     let syncedSeen = 0;
     let newJobsSeen = 0;
 
-    fetch(`${baseUrl}/jobs/sync`, {
+    fetch(buildUrl(baseUrl, endpoints.jobs.sync), {
       method: "GET",
-      headers: {
-        ...(token ? { [AUTH_HEADER]: token } : {}),
-      },
+      headers: token ? { [AUTH_HEADER]: token } : {},
       signal: controller.signal,
     })
       .then(async (response) => {
@@ -402,7 +416,7 @@ export async function syncJobs(onProgress?: (synced: number, total: number) => v
 // Resumes API
 export async function getResumes(): Promise<{ resumes: Resume[] }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.list));
   return res.json();
 }
 
@@ -413,7 +427,7 @@ export async function createResume(data: {
   filename?: string;
 }): Promise<{ resume: Resume }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.create), {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -422,13 +436,13 @@ export async function createResume(data: {
 
 export async function getResume(id: number): Promise<{ resume: Resume }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.byId(id)));
   return res.json();
 }
 
 export async function updateResume(id: number, data: { name?: string; content?: string }): Promise<{ resume: Resume }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.update(id)), {
     method: "PUT",
     body: JSON.stringify(data),
   });
@@ -437,7 +451,7 @@ export async function updateResume(id: number, data: { name?: string; content?: 
 
 export async function deleteResume(id: number): Promise<{ success: boolean }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.delete(id)), {
     method: "DELETE",
   });
   return res.json();
@@ -445,7 +459,7 @@ export async function deleteResume(id: number): Promise<{ success: boolean }> {
 
 export async function setDefaultResume(id: number): Promise<{ resume: Resume }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/default`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.setDefault(id)), {
     method: "POST",
   });
   return res.json();
@@ -454,7 +468,7 @@ export async function setDefaultResume(id: number): Promise<{ resume: Resume }> 
 // Tailor API
 export async function tailorResume(jobId: number, resumeId: number, forceNew = false): Promise<TailoredResume> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/tailor/${jobId}`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.tailor.create(jobId)), {
     method: "POST",
     body: JSON.stringify({ resumeId, forceNew }),
   });
@@ -465,14 +479,14 @@ export async function getTailoredVersions(jobId: number, resumeId?: number): Pro
   const baseUrl = await getBaseUrl();
   const query = new URLSearchParams();
   if (resumeId) query.set("resumeId", String(resumeId));
-  
-  const res = await fetchWithAuth(`${baseUrl}/tailor/${jobId}?${query}`);
+
+  const res = await fetchWithAuth(`${buildUrl(baseUrl, endpoints.tailor.get(jobId))}?${query}`);
   return res.json();
 }
 
 export async function updateTailoredResume(id: number, content: string): Promise<{ tailoredResume: TailoredResume }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/tailor/${id}`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.tailor.update(id)), {
     method: "PUT",
     body: JSON.stringify({ content }),
   });
@@ -484,14 +498,14 @@ export async function getJobDetail(id: number, params?: { resumeId?: number }): 
   const baseUrl = await getBaseUrl();
   const query = new URLSearchParams();
   if (params?.resumeId) query.set("resumeId", String(params.resumeId));
-  
-  const res = await fetchWithAuth(`${baseUrl}/jobs/${id}?${query}`);
+
+  const res = await fetchWithAuth(`${buildUrl(baseUrl, endpoints.jobs.byId(id))}?${query}`);
   return res.json();
 }
 
 export async function analyzeJob(jobId: number, resumeId: number, forceRefresh = false): Promise<{ analysis: JobAnalysis }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/jobs/${jobId}/analyze`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.analyze(jobId)), {
     method: "POST",
     body: JSON.stringify({ resumeId, forceRefresh }),
   });
@@ -502,8 +516,8 @@ export async function getJobAnalysis(jobId: number, resumeId: number): Promise<{
   const baseUrl = await getBaseUrl();
   const query = new URLSearchParams();
   query.set("resumeId", String(resumeId));
-  
-  const res = await fetchWithAuth(`${baseUrl}/jobs/${jobId}/analysis?${query}`);
+
+  const res = await fetchWithAuth(`${buildUrl(baseUrl, endpoints.jobs.analysis(jobId))}?${query}`);
   return res.json();
 }
 
@@ -512,7 +526,7 @@ export async function getJobPrescore(jobId: number, resumeId: number): Promise<{
   const query = new URLSearchParams();
   query.set("resumeId", String(resumeId));
 
-  const res = await fetchWithAuth(`${baseUrl}/jobs/${jobId}/prescore?${query}`);
+  const res = await fetchWithAuth(`${buildUrl(baseUrl, endpoints.jobs.prescore(jobId))}?${query}`);
   return res.json();
 }
 
@@ -522,13 +536,13 @@ export async function getJobPrescore(jobId: number, resumeId: number): Promise<{
 
 export async function getResumeStatus(id: number): Promise<ResumeStatus> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/status`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.status(id)));
   return res.json();
 }
 
 export async function getResumeVersions(id: number): Promise<ResumeVersionsResponse> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/resumes/${id}/versions`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.resumes.versions(id)));
   return res.json();
 }
 
@@ -544,7 +558,7 @@ export async function uploadTailoredPdf(
   const baseUrl = await getBaseUrl();
   const form = new FormData();
   form.append("file", file, filename);
-  const res = await fetchWithAuth(`${baseUrl}/resumes/tailored/${tailoredResumeId}/pdf`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.tailor.uploadPdf(tailoredResumeId)), {
     method: "POST",
     body: form,
   });
@@ -560,13 +574,13 @@ export async function getFunnelMetrics(
 ): Promise<FunnelMetrics> {
   const baseUrl = await getBaseUrl();
   const query = period ? `?period=${period}` : "";
-  const res = await fetchWithAuth(`${baseUrl}/analytics/funnel${query}`);
+  const res = await fetchWithAuth(`${buildUrl(baseUrl, endpoints.analytics.funnel)}${query}`);
   return res.json();
 }
 
 export async function getSkillInsights(): Promise<SkillInsights> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/analytics/skills`);
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.analytics.skills));
   return res.json();
 }
 
@@ -576,7 +590,7 @@ export async function getSkillInsights(): Promise<SkillInsights> {
 
 export async function createJob(data: CreateJobRequest): Promise<{ job: Job }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(`${baseUrl}/jobs`, {
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.list), {
     method: "POST",
     body: JSON.stringify(data),
   });

@@ -192,7 +192,7 @@
       "title": "Wall-E",
       "subtitle": "Your AI-Powered Job Hunting Copilot",
       "description": "Wall-E connects to Eve, your local AI assistant, to help you manage job applications.",
-      "getStarted": "Get Started"
+      "cta": "Get Started"
     },
     "configure": {
       "title": "Connect to Eve",
@@ -202,6 +202,8 @@
       "testConnection": "Test",
       "continue": "Continue",
       "connected": "Connected to Eve",
+      "connectionTimedOut": "Connection timed out",
+      "connectionFailed": "Connection failed",
       "hint": "Run `bun run serve` in Eve directory to start server",
       "testingConnection": "Testing connection...",
       "back": "Back"
@@ -223,8 +225,7 @@
       "server": "Server",
       "version": "Eve Version",
       "paired": "Paired",
-      "justNow": "Just now",
-      "startUsing": "Start Using"
+      "startButton": "Start Using"
     }
   },
   "reconnect": {
