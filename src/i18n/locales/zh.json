@@ -6,7 +6,8 @@
     "cancel": "取消",
     "search": "搜索",
     "connected": "已连接",
-    "offline": "离线"
+    "offline": "离线",
+    "retry": "重试"
   },
   "header": {
     "title": "Eve"
@@ -99,9 +100,10 @@
       "guide": {
         "step1": "1. 打开终端 (Terminal)",
         "step2": "2. 输入并运行以下命令：",
-        "step3": "3. 在弹出的浏览器窗口中完成授权",
+        "step3": "3. 在弹弹出的浏览器窗口中完成授权",
         "copyCommand": "复制命令",
-        "checkStatus": "检查状态"
+        "checkStatus": "检查状态",
+        "copied": "命令已复制到剪贴板"
       },
       "accounts": {
         "title": "已连接账号",

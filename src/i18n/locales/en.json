@@ -6,7 +6,8 @@
     "cancel": "Cancel",
     "search": "Search",
     "connected": "Connected",
-    "offline": "Offline"
+    "offline": "Offline",
+    "retry": "Retry"
   },
   "header": {
     "title": "Eve"
@@ -101,7 +102,8 @@
         "step2": "2. Run this command:",
         "step3": "3. Follow browser prompt to authorize",
         "copyCommand": "Copy Command",
-        "checkStatus": "Check Status"
+        "checkStatus": "Check Status",
+        "copied": "Command copied to clipboard"
       },
       "accounts": {
         "title": "Connected Accounts",
