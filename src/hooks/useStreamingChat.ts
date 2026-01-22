@@ -359,7 +359,7 @@ function handleAISDKEvent(
       setMessages((prev) => {
         const updated = prev.map((msg) =>
           msg.id === messageId
-            ? { ...msg, content: `Error: ${event.message}`, isStreaming: false }
+            ? { ...msg, content: event.message, isStreaming: false }
             : msg,
         );
         persistMessages(updated);

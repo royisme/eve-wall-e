@@ -509,7 +509,7 @@ export async function getTailoredVersions(
   if (resumeId) query.set("resumeId", String(resumeId));
 
   const res = await fetchWithAuth(
-    `${buildUrl(baseUrl, endpoints.jobs.tailor.get(jobId))}?${query}`,
+    `${buildUrl(baseUrl, endpoints.jobs.tailor.versions(jobId))}?${query}`,
   );
   return res.json();
 }

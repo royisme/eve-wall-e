@@ -14,12 +14,13 @@ interface ThinkingBlockProps {
 export function ThinkingBlock({ thinking }: ThinkingBlockProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  // Auto-expand new thinking blocks
+  // Auto-expand new thinking blocks that aren't collapsed
   useEffect(() => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       thinking.forEach((block) => {
-        if (!prev.has(block.id)) {
+        // Only auto-expand if: 1) it's new, and 2) it's not collapsed
+        if (!prev.has(block.id) && !block.isCollapsed) {
           next.add(block.id);
         }
       });
