@@ -3,7 +3,7 @@
  * Displays AI thinking process with collapsible UI
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, Brain } from "lucide-react";
 import type { ThinkingBlock as ThinkingBlockType } from "@/lib/streaming-chat-types";
 
@@ -12,7 +12,20 @@ interface ThinkingBlockProps {
 }
 
 export function ThinkingBlock({ thinking }: ThinkingBlockProps) {
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(thinking.map(t => t.id)));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Auto-expand new thinking blocks
+  useEffect(() => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      thinking.forEach((block) => {
+        if (!prev.has(block.id)) {
+          next.add(block.id);
+        }
+      });
+      return next;
+    });
+  }, [thinking]);
 
   if (thinking.length === 0) return null;
 

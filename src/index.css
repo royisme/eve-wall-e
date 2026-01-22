@@ -2,9 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/jetbrains-mono";
-@import "highlight.js/styles/github-dark.min.css" layer(components);
+@import "highlight.js/styles/github.min.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
+
+/* Override highlight.js theme for dark mode */
+:is(.dark *) {
+    @import "highlight.js/styles/github-dark.min.css" layer(components);
+}
 
 :root {
     color-scheme: light;

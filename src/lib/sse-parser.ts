@@ -125,6 +125,7 @@ export async function* streamChat(
       }
     }
   } finally {
+    reader.cancel();
     reader.releaseLock();
   }
 }

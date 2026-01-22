@@ -383,8 +383,8 @@ export async function syncJobs(
                   } else if (data.status === "complete") {
                     controller.abort();
                     resolve({
-                      synced: data.synced || syncedSeen,
-                      newJobs: data.newJobs || newJobsSeen,
+                      synced: data.synced ?? syncedSeen,
+                      newJobs: data.newJobs ?? newJobsSeen,
                     });
                     return;
                   } else if (data.status === "error") {
@@ -413,7 +413,9 @@ export async function syncJobs(
 // Resumes API
 export async function getResumes(): Promise<{ resumes: Resume[] }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.resumes.list));
+  const res = await fetchWithAuth(
+    buildUrl(baseUrl, endpoints.jobs.resumes.list),
+  );
   return res.json();
 }
 
@@ -424,10 +426,13 @@ export async function createResume(data: {
   filename?: string;
 }): Promise<{ resume: Resume }> {
   const baseUrl = await getBaseUrl();
-  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.jobs.resumes.create), {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  const res = await fetchWithAuth(
+    buildUrl(baseUrl, endpoints.jobs.resumes.create),
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    },
+  );
   return res.json();
 }
 

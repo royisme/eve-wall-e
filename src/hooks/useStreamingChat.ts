@@ -163,6 +163,16 @@ export function useStreamingChat() {
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           console.log("[Chat] Stream aborted by user");
+          // Mark message as complete when aborted
+          setMessages((prev) => {
+            const updated = prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, isStreaming: false }
+                : msg,
+            );
+            persistMessages(updated);
+            return updated;
+          });
         } else {
           console.error("[Chat] Stream error:", err);
           setError(err instanceof Error ? err : new Error(String(err)));
@@ -349,7 +359,7 @@ function handleAISDKEvent(
       setMessages((prev) => {
         const updated = prev.map((msg) =>
           msg.id === messageId
-            ? { ...msg, content: `错误: ${event.message}`, isStreaming: false }
+            ? { ...msg, content: `Error: ${event.message}`, isStreaming: false }
             : msg,
         );
         persistMessages(updated);

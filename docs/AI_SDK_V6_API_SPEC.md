@@ -4,7 +4,7 @@
 
 ### 1. **所有事件必须包含 `id` 字段**
 每个 SSE 事件必须有唯一的 ID：
-```json
+```sse
 {
   "id": "evt_abc123",  // ✅ 必需
   "type": "text-delta",
@@ -41,7 +41,7 @@ x-vercel-ai-ui-message-stream: v1  # ✅ 关键！不是 x-vercel-ai-data-stream
 ### POST `/jobs/chat`
 
 **请求格式：**
-```json
+```sse
 {
   "messages": [
     {
@@ -91,7 +91,7 @@ data: {"id":"evt_123","type":"event-type",...}\n\n
 ## 🎯 事件类型详解
 
 ### 1. message-start
-```json
+```sse
 data: {
   "id": "evt_1",
   "type": "message-start",
@@ -102,7 +102,7 @@ data: {
 ```
 
 ### 2. reasoning-start / reasoning-delta / reasoning-end
-```json
+```sse
 data: {
   "id": "evt_2",
   "type": "reasoning-start",
@@ -132,7 +132,7 @@ data: {
 ```
 
 ### 3. tool-call-start / tool-call-delta / tool-call-result
-```json
+```sse
 data: {
   "id": "evt_6",
   "type": "tool-call-start",
@@ -170,7 +170,7 @@ data: {
 ```
 
 ### 4. text-start / text-delta / text-end
-```json
+```sse
 data: {
   "id": "evt_9",
   "type": "text-start",
@@ -207,7 +207,7 @@ data: {
 ```
 
 ### 5. message-end
-```json
+```sse
 data: {
   "id": "evt_14",
   "type": "message-end",
@@ -221,7 +221,7 @@ data: {
 ```
 
 ### 6. error
-```json
+```sse
 data: {
   "id": "evt_error",
   "type": "error",
@@ -288,7 +288,7 @@ data: {"id":"22","type":"message-end","messageId":"msg_1","finishReason":"stop",
 ## ⚠️ 常见错误
 
 ### ❌ 错误1：缺少 id 字段
-```json
+```sse
 // ❌ 错误
 {
   "type": "text-delta",
@@ -317,7 +317,7 @@ x-vercel-ai-ui-message-stream: v1  # ✅ 正确
 ```
 
 ### ❌ 错误4：textId 不匹配
-```json
+```sse
 {"id":"1","type":"text-start","textId":"text_1"}
 {"id":"2","type":"text-delta","textId":"text_2","delta":"..."}  // ❌ textId 不一致
 ```

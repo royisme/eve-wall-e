@@ -38,7 +38,7 @@
 
 ## 📋 后端需要实现的 API 规范
 
-详见：`docs/STREAMING_CHAT_API_SPEC.md`（如果需要我可以创建这个文件）
+详见：`docs/AI_SDK_V6_API_SPEC.md`（如果需要我可以创建这个文件）
 
 ### 核心端点：`POST /jobs/chat`
 
@@ -73,13 +73,13 @@
 Content-Type: `text/event-stream`
 
 事件类型：
-1. `message_start` - 消息开始
-2. `thinking_start` / `thinking_delta` / `thinking_done` - 思考过程
-3. `tool_calls` - 工具调用（可并行多个）
-4. `tool_call_delta` - 工具执行进度
-5. `tool_result` - 工具执行结果
-6. `content_delta` - 文本内容增量
-7. `message_done` - 消息完成
+1. `message-start` - 消息开始
+2. `reasoning-start` / `reasoning-delta` / `reasoning-end` - 思考过程
+3. `tool-calls` - 工具调用（可并行多个）
+4. `tool-call-delta` - 工具执行进度
+5. `tool-call-result` - 工具执行结果
+6. `text-delta` - 文本内容增量
+7. `message-end` - 消息完成
 8. `error` - 错误
 
 详细事件格式请参考 `src/lib/streaming-chat-types.ts`
@@ -176,7 +176,7 @@ f9106c8 Add floating button to open side panel
 - `src/lib/streaming-chat-types.ts` - 完整的类型定义
 - `src/lib/sse-parser.ts` - SSE 解析实现
 - `src/hooks/useStreamingChat.ts` - Hook 实现逻辑
-- `docs/STREAMING_CHAT_API_SPEC.md` - 完整 API 规范（需要创建）
+- `docs/AI_SDK_V6_API_SPEC.md` - 完整 API 规范（需要创建）
 
 ---
 

@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/lib/utils";
 
 interface MessageContentProps {
@@ -15,12 +16,18 @@ interface MessageContentProps {
   className?: string;
 }
 
-export function MessageContent({ content, isStreaming, className }: MessageContentProps) {
+export function MessageContent({
+  content,
+  isStreaming,
+  className,
+}: MessageContentProps) {
   return (
-    <div className={cn("prose prose-sm max-w-none dark:prose-invert", className)}>
+    <div
+      className={cn("prose prose-sm max-w-none dark:prose-invert", className)}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight, rehypeRaw]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeHighlight]}
         components={{
           // Custom rendering for code blocks
           code({ node, inline, className, children, ...props }) {
@@ -46,7 +53,10 @@ export function MessageContent({ content, isStreaming, className }: MessageConte
                   </div>
                 )}
                 <pre className="overflow-x-auto p-4 rounded-lg bg-muted/50 border border-border/40">
-                  <code className={cn("text-sm font-mono", className)} {...props}>
+                  <code
+                    className={cn("text-sm font-mono", className)}
+                    {...props}
+                  >
                     {children}
                   </code>
                 </pre>
@@ -92,7 +102,10 @@ export function MessageContent({ content, isStreaming, className }: MessageConte
 
           ol({ children, ...props }) {
             return (
-              <ol className="list-decimal list-inside space-y-1 my-3" {...props}>
+              <ol
+                className="list-decimal list-inside space-y-1 my-3"
+                {...props}
+              >
                 {children}
               </ol>
             );
@@ -101,7 +114,10 @@ export function MessageContent({ content, isStreaming, className }: MessageConte
           // Custom rendering for headings
           h1({ children, ...props }) {
             return (
-              <h1 className="text-xl font-bold mt-6 mb-3 pb-2 border-b border-border" {...props}>
+              <h1
+                className="text-xl font-bold mt-6 mb-3 pb-2 border-b border-border"
+                {...props}
+              >
                 {children}
               </h1>
             );
@@ -127,7 +143,10 @@ export function MessageContent({ content, isStreaming, className }: MessageConte
           table({ children, ...props }) {
             return (
               <div className="overflow-x-auto my-4">
-                <table className="min-w-full border-collapse border border-border" {...props}>
+                <table
+                  className="min-w-full border-collapse border border-border"
+                  {...props}
+                >
                   {children}
                 </table>
               </div>
