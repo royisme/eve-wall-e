@@ -1,21 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEveChat, type Message } from "@/hooks/useEveChat";
 import { useJobDetection } from "@/hooks/useJobDetection";
+import { useStreamingChat } from "@/hooks/useStreamingChat";
 import { JobContextStrip } from "@/components/JobContextStrip";
 import { ToolCallCard } from "@/components/ToolCallCard";
-import { Send, Loader2, Sparkles, Bot, User } from "lucide-react";
+import { ThinkingBlock } from "@/components/ThinkingBlock";
+import { Send, Loader2, Sparkles, Bot, User, StopCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function Chat() {
   const { t } = useTranslation();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { mutate, isPending, error } = useEveChat();
   const { detectedJob, isSaving, saveCurrentPage, dismissJob } =
     useJobDetection();
+  const { messages, isStreaming, error, sendMessage, stopGeneration } =
+    useStreamingChat();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,36 +24,24 @@ export function Chat() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isPending]);
+  }, [messages]);
 
   const handleSend = (customPrompt?: string) => {
     const promptText = customPrompt || input;
-    if (!promptText.trim() || isPending) return;
+    if (!promptText.trim() || isStreaming) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: promptText,
-      timestamp: new Date(),
-    };
+    const context = detectedJob
+      ? {
+          detectedJob: {
+            title: detectedJob.title,
+            company: detectedJob.company,
+            url: detectedJob.url,
+          },
+        }
+      : undefined;
 
-    setMessages((prev) => [...prev, userMessage]);
+    sendMessage(promptText, context);
     if (!customPrompt) setInput("");
-
-    mutate(
-      { prompt: promptText },
-      {
-        onSuccess: (data) => {
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: data.response,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, assistantMessage]);
-        },
-      },
-    );
   };
 
   const handleAnalyzeJob = async () => {
@@ -72,7 +61,6 @@ export function Chat() {
   };
 
   const isEmpty = messages.length === 0;
-
   const suggestionKeys = ["findJobs", "analyzeJob", "helpResume"] as const;
 
   return (
@@ -82,7 +70,7 @@ export function Chat() {
         onAnalyze={handleAnalyzeJob}
         onSave={handleSaveJob}
         onDismiss={dismissJob}
-        isAnalyzing={isSaving || isPending}
+        isAnalyzing={isSaving || isStreaming}
       />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -132,44 +120,39 @@ export function Chat() {
                     <Bot className="h-4 w-4" />
                   )}
                 </div>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
-                    msg.role === "user"
-                      ? "bg-accent text-accent-foreground rounded-tr-sm"
-                      : "bg-card border border-border text-foreground rounded-tl-sm"
-                  }`}
-                >
-                  <p className="leading-relaxed whitespace-pre-wrap">
-                    {msg.content}
-                  </p>
+
+                <div className="flex flex-col gap-3 max-w-[85%]">
+                  {/* Thinking blocks */}
+                  {msg.thinking && msg.thinking.length > 0 && (
+                    <ThinkingBlock thinking={msg.thinking} />
+                  )}
+
+                  {/* Tool calls */}
+                  {msg.toolCalls && msg.toolCalls.length > 0 && (
+                    <ToolCallCard tools={msg.toolCalls} />
+                  )}
+
+                  {/* Message content */}
+                  {msg.content && (
+                    <div
+                      className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                        msg.role === "user"
+                          ? "bg-accent text-accent-foreground rounded-tr-sm"
+                          : "bg-card border border-border text-foreground rounded-tl-sm"
+                      }`}
+                    >
+                      <p className="leading-relaxed whitespace-pre-wrap">
+                        {msg.content}
+                        {msg.isStreaming && (
+                          <span className="inline-block w-1.5 h-4 bg-primary/60 ml-1 animate-pulse" />
+                        )}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
-            {isPending && (
-              <div className="space-y-4 animate-in fade-in duration-300">
-                <ToolCallCard
-                  tools={[
-                    {
-                      id: "1",
-                      name: "jobs_search",
-                      status: "success",
-                      result: "Found 12 jobs",
-                    },
-                    { id: "2", name: "jobs_analyze", status: "running" },
-                  ]}
-                />
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/20 text-primary ring-1 ring-primary/20 flex items-center justify-center shrink-0">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                  <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-10">
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></span>
-                  </div>
-                </div>
-              </div>
-            )}
+
             {error && (
               <div className="text-xs text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20 animate-in fade-in flex gap-2 items-center">
                 <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
@@ -188,19 +171,25 @@ export function Chat() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder={t("chat.placeholder")}
-            disabled={isPending}
+            disabled={isStreaming}
             className="border-0 focus-visible:ring-0 shadow-none bg-transparent h-10 px-3"
           />
           <Button
-            onClick={() => handleSend()}
-            disabled={isPending || !input.trim()}
+            onClick={() => (isStreaming ? stopGeneration() : handleSend())}
+            disabled={!isStreaming && !input.trim()}
             size="icon"
+            variant={isStreaming ? "destructive" : "default"}
             className="h-9 w-9 shrink-0 rounded-xl transition-all hover:scale-105 active:scale-95"
           >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+            {isStreaming ? (
+              <StopCircle className="h-4 w-4" />
             ) : (
               <Send className="h-4 w-4" />
             )}

@@ -19,57 +19,61 @@ export const endpoints = {
   },
 
   // ============================================
-  // Chat & Agent
-  // ============================================
-  chat: "/chat",
-  agent: {
-    status: "/agent/status",
-  },
-
-  // ============================================
-  // Jobs
+  // Jobs - All Wall-E functionality under /jobs namespace
   // ============================================
   jobs: {
+    // Chat
+    chat: "/jobs/chat",
+    chatStop: "/jobs/chat/stop",
+    chatHistory: "/jobs/chat/history",
+
+    // Job Management
     list: "/jobs",
+    create: "/jobs",
     stats: "/jobs/stats",
     sync: "/jobs/sync",
+    ingest: "/jobs/ingest",
     byId: (id: number) => `/jobs/${id}`,
+    update: (id: number) => `/jobs/${id}`,
+    delete: (id: number) => `/jobs/${id}`,
     star: (id: number) => `/jobs/${id}/star`,
-    analyze: (jobId: number) => `/jobs/${jobId}/analyze`,
-    analysis: (jobId: number) => `/jobs/${jobId}/analysis`,
-    prescore: (jobId: number) => `/jobs/${jobId}/prescore`,
-  },
+    analyze: (id: number) => `/jobs/${id}/analyze`,
+    analysis: (id: number) => `/jobs/${id}/analysis`,
+    prescore: (id: number) => `/jobs/${id}/prescore`,
 
-  // ============================================
-  // Resumes
-  // ============================================
-  resumes: {
-    list: "/resumes",
-    create: "/resumes",
-    byId: (id: number) => `/resumes/${id}`,
-    update: (id: number) => `/resumes/${id}`,
-    delete: (id: number) => `/resumes/${id}`,
-    setDefault: (id: number) => `/resumes/${id}/default`,
-    status: (id: number) => `/resumes/${id}/status`,
-    versions: (id: number) => `/resumes/${id}/versions`,
-  },
+    // Resumes
+    resumes: {
+      list: "/jobs/resumes",
+      create: "/jobs/resumes",
+      byId: (id: number) => `/jobs/resumes/${id}`,
+      update: (id: number) => `/jobs/resumes/${id}`,
+      delete: (id: number) => `/jobs/resumes/${id}`,
+      setDefault: (id: number) => `/jobs/resumes/${id}/set-default`,
+      status: (id: number) => `/jobs/resumes/${id}/status`,
+      versions: (id: number) => `/jobs/resumes/${id}/versions`,
+    },
 
-  // ============================================
-  // Tailored Resumes
-  // ============================================
-  tailor: {
-    create: (jobId: number) => `/tailor/${jobId}`,
-    get: (jobId: number) => `/tailor/${jobId}`,
-    update: (id: number) => `/tailor/${id}`,
-    uploadPdf: (tailoredResumeId: number) => `/resumes/tailored/${tailoredResumeId}/pdf`,
-  },
+    // Tailored Resumes
+    tailor: {
+      create: (jobId: number) => `/jobs/tailor/${jobId}`,
+      versions: (jobId: number) => `/jobs/tailor/${jobId}/versions`,
+      pdf: (jobId: number) => `/jobs/tailor/${jobId}/pdf`,
+      update: (id: number) => `/jobs/tailor/${id}`,
+      uploadPdf: (tailoredResumeId: number) =>
+        `/jobs/tailor/${tailoredResumeId}/pdf`,
+    },
 
-  // ============================================
-  // Analytics
-  // ============================================
-  analytics: {
-    funnel: "/analytics/funnel",
-    skills: "/analytics/skills",
+    // Tools & Agent
+    tools: "/jobs/tools",
+    agent: {
+      status: "/jobs/agent/status",
+    },
+
+    // Analytics
+    analytics: {
+      funnel: "/jobs/analytics/funnel",
+      skills: "/jobs/analytics/skills",
+    },
   },
 } as const;
 
