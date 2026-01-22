@@ -1,9 +1,9 @@
 /**
- * useStreamingChat Hook
- * Manages streaming chat state and handles SSE events
+ * useStreamingChat Hook - AI SDK v6 Compatible
+ * Manages streaming chat state and handles AI SDK events
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { streamChat } from "@/lib/sse-parser";
 import { getAuthToken, getServerUrl } from "@/lib/auth";
 import { buildUrl, endpoints } from "@/lib/endpoints";
@@ -13,14 +13,58 @@ import type {
   ChatContext,
   ThinkingBlock,
   ToolCall,
-  SSEEvent,
+  AISDKEvent,
+  MessageSnapshot,
 } from "@/lib/streaming-chat-types";
+
+// Local storage key for message persistence
+const MESSAGES_STORAGE_KEY = "wall-e-chat-messages";
 
 export function useStreamingChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Load messages from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(MESSAGES_STORAGE_KEY);
+    if (stored) {
+      try {
+        const snapshots: MessageSnapshot[] = JSON.parse(stored);
+        const restored = snapshots.map((snapshot) => ({
+          id: snapshot.id,
+          role: snapshot.role,
+          content: snapshot.content,
+          thinking: snapshot.reasoning?.map((r, i) => ({
+            id: `thinking_${i}`,
+            content: r,
+            isCollapsed: false,
+          })),
+          toolCalls: snapshot.toolCalls,
+          timestamp: new Date(snapshot.timestamp),
+          isStreaming: false,
+        }));
+        setMessages(restored);
+      } catch (e) {
+        console.error("[Chat] Failed to restore messages:", e);
+      }
+    }
+  }, []);
+
+  // Save messages to localStorage incrementally
+  const persistMessages = useCallback((msgs: Message[]) => {
+    const snapshots: MessageSnapshot[] = msgs.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      reasoning: msg.thinking?.map((t) => t.content),
+      toolCalls: msg.toolCalls,
+      timestamp: msg.timestamp.toISOString(),
+      isComplete: !msg.isStreaming,
+    }));
+    localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(snapshots));
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string, context?: ChatContext) => {
@@ -32,7 +76,9 @@ export function useStreamingChat() {
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, userMessage]);
+      const newMessages = [...messages, userMessage];
+      setMessages(newMessages);
+      persistMessages(newMessages);
       setIsStreaming(true);
       setError(null);
 
@@ -48,11 +94,12 @@ export function useStreamingChat() {
         isStreaming: true,
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      const messagesWithAssistant = [...newMessages, assistantMessage];
+      setMessages(messagesWithAssistant);
 
       // Prepare request
       const request: ChatRequest = {
-        messages: [...messages, userMessage].map((msg) => ({
+        messages: newMessages.map((msg) => ({
           role: msg.role,
           content: msg.content,
           timestamp: msg.timestamp.toISOString(),
@@ -72,35 +119,47 @@ export function useStreamingChat() {
         const token = await getAuthToken();
         const url = buildUrl(baseUrl, endpoints.jobs.chat);
 
-        // Track current thinking and tool calls
-        const thinkingMap = new Map<string, ThinkingBlock>();
+        // Track state for AI SDK v6 events
+        const reasoningMap = new Map<string, ThinkingBlock>();
         const toolCallsMap = new Map<string, ToolCall>();
-        let contentBuffer = "";
+        const textBlocksMap = new Map<string, string>();
+        let currentTextId: string | null = null;
 
         for await (const event of streamChat(
           url,
           request,
           token,
-          abortControllerRef.current.signal
+          abortControllerRef.current.signal,
         )) {
-          handleSSEEvent(
+          handleAISDKEvent(
             event,
             assistantMessageId,
-            thinkingMap,
+            reasoningMap,
             toolCallsMap,
-            contentBuffer,
-            setMessages
+            textBlocksMap,
+            currentTextId,
+            setMessages,
+            persistMessages,
           );
+
+          // Track current text block
+          if (event.type === "text-start") {
+            currentTextId = event.textId;
+          } else if (event.type === "text-end") {
+            currentTextId = null;
+          }
         }
 
         // Mark as complete
-        setMessages((prev) =>
-          prev.map((msg) =>
+        setMessages((prev) => {
+          const updated = prev.map((msg) =>
             msg.id === assistantMessageId
               ? { ...msg, isStreaming: false }
-              : msg
-          )
-        );
+              : msg,
+          );
+          persistMessages(updated);
+          return updated;
+        });
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           console.log("[Chat] Stream aborted by user");
@@ -109,16 +168,20 @@ export function useStreamingChat() {
           setError(err instanceof Error ? err : new Error(String(err)));
 
           // Remove incomplete assistant message
-          setMessages((prev) =>
-            prev.filter((msg) => msg.id !== assistantMessageId)
-          );
+          setMessages((prev) => {
+            const filtered = prev.filter(
+              (msg) => msg.id !== assistantMessageId,
+            );
+            persistMessages(filtered);
+            return filtered;
+          });
         }
       } finally {
         setIsStreaming(false);
         abortControllerRef.current = null;
       }
     },
-    [messages]
+    [messages, persistMessages],
   );
 
   const stopGeneration = useCallback(() => {
@@ -130,6 +193,7 @@ export function useStreamingChat() {
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
+    localStorage.removeItem(MESSAGES_STORAGE_KEY);
   }, []);
 
   return {
@@ -142,64 +206,105 @@ export function useStreamingChat() {
   };
 }
 
-// Helper function to handle SSE events
-function handleSSEEvent(
-  event: SSEEvent,
+// Helper function to handle AI SDK v6 events
+function handleAISDKEvent(
+  event: AISDKEvent,
   messageId: string,
-  thinkingMap: Map<string, ThinkingBlock>,
+  reasoningMap: Map<string, ThinkingBlock>,
   toolCallsMap: Map<string, ToolCall>,
-  contentBuffer: string,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  textBlocksMap: Map<string, string>,
+  currentTextId: string | null,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+  persistMessages: (msgs: Message[]) => void,
 ) {
   switch (event.type) {
-    case "thinking_start":
-      thinkingMap.set(event.thinkingId, {
-        id: event.thinkingId,
+    case "reasoning-start":
+      reasoningMap.set(event.reasoningId, {
+        id: event.reasoningId,
         content: "",
         isCollapsed: false,
       });
       break;
 
-    case "thinking_delta":
+    case "reasoning-delta":
       {
-        const thinking = thinkingMap.get(event.thinkingId);
-        if (thinking) {
-          thinking.content += event.delta;
-          updateMessage(messageId, { thinking: Array.from(thinkingMap.values()) }, setMessages);
+        const reasoning = reasoningMap.get(event.reasoningId);
+        if (reasoning) {
+          reasoning.content += event.delta;
+          updateMessage(
+            messageId,
+            { thinking: Array.from(reasoningMap.values()) },
+            setMessages,
+            persistMessages,
+          );
         }
       }
       break;
 
-    case "thinking_done":
+    case "reasoning-end":
       {
-        const thinking = thinkingMap.get(event.thinkingId);
-        if (thinking) {
-          thinking.content = event.content;
-          updateMessage(messageId, { thinking: Array.from(thinkingMap.values()) }, setMessages);
+        const reasoning = reasoningMap.get(event.reasoningId);
+        if (reasoning) {
+          reasoning.content = event.content;
+          updateMessage(
+            messageId,
+            { thinking: Array.from(reasoningMap.values()) },
+            setMessages,
+            persistMessages,
+          );
         }
       }
       break;
 
-    case "tool_calls":
-      for (const tc of event.toolCalls) {
-        let args: Record<string, any> = {};
-        try {
-          args = JSON.parse(tc.function.arguments);
-        } catch {
-          console.error("[Chat] Failed to parse tool arguments:", tc.function.arguments);
-        }
-
-        toolCallsMap.set(tc.id, {
-          id: tc.id,
-          name: tc.function.name,
-          arguments: args,
-          status: "pending",
-        });
-      }
-      updateMessage(messageId, { toolCalls: Array.from(toolCallsMap.values()) }, setMessages);
+    case "text-start":
+      textBlocksMap.set(event.textId, "");
       break;
 
-    case "tool_call_delta":
+    case "text-delta":
+      {
+        const current = textBlocksMap.get(event.textId) || "";
+        textBlocksMap.set(event.textId, current + event.delta);
+
+        // Combine all text blocks
+        const fullText = Array.from(textBlocksMap.values()).join("");
+        updateMessage(
+          messageId,
+          { content: fullText },
+          setMessages,
+          persistMessages,
+        );
+      }
+      break;
+
+    case "text-end":
+      {
+        textBlocksMap.set(event.textId, event.content);
+        const fullText = Array.from(textBlocksMap.values()).join("");
+        updateMessage(
+          messageId,
+          { content: fullText },
+          setMessages,
+          persistMessages,
+        );
+      }
+      break;
+
+    case "tool-call-start":
+      toolCallsMap.set(event.toolCallId, {
+        id: event.toolCallId,
+        name: event.toolName,
+        arguments: event.arguments,
+        status: "pending",
+      });
+      updateMessage(
+        messageId,
+        { toolCalls: Array.from(toolCallsMap.values()) },
+        setMessages,
+        persistMessages,
+      );
+      break;
+
+    case "tool-call-delta":
       {
         const toolCall = toolCallsMap.get(event.toolCallId);
         if (toolCall) {
@@ -207,12 +312,17 @@ function handleSSEEvent(
           if (event.progress) {
             toolCall.progress = event.progress;
           }
-          updateMessage(messageId, { toolCalls: Array.from(toolCallsMap.values()) }, setMessages);
+          updateMessage(
+            messageId,
+            { toolCalls: Array.from(toolCallsMap.values()) },
+            setMessages,
+            persistMessages,
+          );
         }
       }
       break;
 
-    case "tool_result":
+    case "tool-call-result":
       {
         const toolCall = toolCallsMap.get(event.toolCallId);
         if (toolCall) {
@@ -224,29 +334,31 @@ function handleSSEEvent(
           if (event.data) {
             toolCall.data = event.data;
           }
-          updateMessage(messageId, { toolCalls: Array.from(toolCallsMap.values()) }, setMessages);
+          updateMessage(
+            messageId,
+            { toolCalls: Array.from(toolCallsMap.values()) },
+            setMessages,
+            persistMessages,
+          );
         }
       }
       break;
 
-    case "content_delta":
-      contentBuffer += event.delta;
-      updateMessage(messageId, { content: contentBuffer }, setMessages);
-      break;
-
     case "error":
       console.error("[Chat] Server error:", event.message);
-      setMessages((prev) =>
-        prev.map((msg) =>
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
           msg.id === messageId
             ? { ...msg, content: `错误: ${event.message}`, isStreaming: false }
-            : msg
-        )
-      );
+            : msg,
+        );
+        persistMessages(updated);
+        return updated;
+      });
       break;
 
     default:
-      // message_start and message_done are informational
+      // message-start and message-end are informational
       break;
   }
 }
@@ -254,11 +366,15 @@ function handleSSEEvent(
 function updateMessage(
   messageId: string,
   updates: Partial<Message>,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+  persistMessages: (msgs: Message[]) => void,
 ) {
-  setMessages((prev) =>
-    prev.map((msg) =>
-      msg.id === messageId ? { ...msg, ...updates } : msg
-    )
-  );
+  setMessages((prev) => {
+    const updated = prev.map((msg) =>
+      msg.id === messageId ? { ...msg, ...updates } : msg,
+    );
+    // Incremental persistence on every update
+    persistMessages(updated);
+    return updated;
+  });
 }
