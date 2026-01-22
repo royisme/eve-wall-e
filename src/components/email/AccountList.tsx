@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, CheckCircle2 } from "lucide-react";
+import { RefreshCw, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EmailStatusResponse } from "@/lib/api";
 
@@ -34,7 +34,9 @@ export function AccountList({ status, onRefresh }: AccountListProps) {
           disabled={status.syncing}
           className="h-7 w-7 p-0"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${status.syncing ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${status.syncing ? "animate-spin" : ""}`}
+          />
         </Button>
       </div>
 
@@ -49,7 +51,9 @@ export function AccountList({ status, onRefresh }: AccountListProps) {
                 <CheckCircle2 className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <div className="font-medium text-sm truncate">{account.email}</div>
+                <div className="font-medium text-sm truncate">
+                  {account.email}
+                </div>
                 {account.lastSyncAt && (
                   <div className="text-xs text-muted-foreground truncate">
                     {t("settings.email.accounts.lastSync", {

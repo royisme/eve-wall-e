@@ -57,10 +57,10 @@ export const endpoints = {
     tailor: {
       create: (jobId: number) => `/jobs/tailor/${jobId}`,
       versions: (jobId: number) => `/jobs/tailor/${jobId}/versions`,
-      pdf: (jobId: number) => `/jobs/tailor/${jobId}/pdf`,
+      pdf: (jobId: number) => `/jobs/tailor/${jobId}/pdf`, // GET: Download PDF for job
       update: (id: number) => `/jobs/tailor/${id}`,
       uploadPdf: (tailoredResumeId: number) =>
-        `/jobs/tailor/${tailoredResumeId}/pdf`,
+        `/jobs/tailor/${tailoredResumeId}/pdf`, // POST: Upload PDF for tailored resume
     },
 
     // Tools & Agent
@@ -75,7 +75,7 @@ export const endpoints = {
       skills: "/jobs/analytics/skills",
     },
   },
-  
+
   // ============================================
   // Email
   // ============================================
