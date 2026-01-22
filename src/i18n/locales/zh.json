@@ -6,7 +6,8 @@
     "cancel": "取消",
     "search": "搜索",
     "connected": "已连接",
-    "offline": "离线"
+    "offline": "离线",
+    "retry": "重试"
   },
   "header": {
     "title": "Eve"
@@ -89,7 +90,32 @@
     "appName": "应用名称",
     "version": "版本",
     "documentation": "文档",
-    "reportIssue": "报告问题"
+    "reportIssue": "报告问题",
+    "email": {
+      "title": "邮件同步",
+      "description": "通过 Gmail 自动抓取职位申请通知",
+      "notInstalled": "未安装 Gmail CLI (gog)",
+      "installGuide": "请安装 gog CLI 工具以启用邮件同步：https://github.com/pdfinn/gog",
+      "setupRequired": "需要配置 Gmail",
+      "guide": {
+        "step1": "1. 打开终端 (Terminal)",
+        "step2": "2. 输入并运行以下命令：",
+        "step3": "3. 在弹弹出的浏览器窗口中完成授权",
+        "copyCommand": "复制命令",
+        "checkStatus": "检查状态",
+        "copied": "命令已复制到剪贴板"
+      },
+      "accounts": {
+        "title": "已连接账号",
+        "lastSync": "上次同步：{{time}}",
+        "noAccounts": "未连接任何账号",
+        "addAccount": "添加账号"
+      },
+      "status": {
+        "syncing": "正在同步邮件...",
+        "error": "同步出错：{{message}}"
+      }
+    }
   },
   "workspace": {
     "title": "Eve 工作区",

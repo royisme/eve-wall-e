@@ -22,6 +22,7 @@ import {
 import { eveApi } from "@/lib/api";
 import { clearAll, getAllActions } from "@/lib/db";
 import { toast } from "@/lib/toast";
+import { EmailSettings } from "./email/EmailSettings";
 
 interface SettingsProps {
   onSave: () => void;
@@ -204,6 +205,9 @@ export function Settings({ onSave }: SettingsProps) {
             </SettingsSection>
           </CardContent>
         </Card>
+
+        {/* Email Section */}
+        <EmailSettings />
 
         {/* Language Section */}
         <Card className="border-border/40">
