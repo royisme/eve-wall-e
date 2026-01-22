@@ -6,6 +6,7 @@ import { useStreamingChat } from "@/hooks/useStreamingChat";
 import { JobContextStrip } from "@/components/JobContextStrip";
 import { ToolCallCard } from "@/components/ToolCallCard";
 import { ThinkingBlock } from "@/components/ThinkingBlock";
+import { MessageContent } from "@/components/MessageContent";
 import { Send, Loader2, Sparkles, Bot, User, StopCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -141,12 +142,10 @@ export function Chat() {
                           : "bg-card border border-border text-foreground rounded-tl-sm"
                       }`}
                     >
-                      <p className="leading-relaxed whitespace-pre-wrap">
-                        {msg.content}
-                        {msg.isStreaming && (
-                          <span className="inline-block w-1.5 h-4 bg-primary/60 ml-1 animate-pulse" />
-                        )}
-                      </p>
+                      <MessageContent
+                        content={msg.content}
+                        isStreaming={msg.isStreaming}
+                      />
                     </div>
                   )}
                 </div>

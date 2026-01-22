@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/jetbrains-mono";
+@import "highlight.js/styles/github-dark.min.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
@@ -155,5 +156,76 @@
     }
     body {
         @apply font-sans bg-background text-foreground antialiased;
+    }
+}
+
+/* Prose styles for Markdown content */
+@layer components {
+    .prose {
+        @apply text-foreground;
+
+        /* Make code blocks use theme colors */
+        .hljs {
+            @apply bg-muted/50 border border-border/40;
+        }
+
+        /* Inline code */
+        code:not(pre code) {
+            @apply text-sm;
+        }
+
+        /* Links */
+        a {
+            @apply no-underline;
+        }
+
+        /* Headings */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            @apply text-foreground font-semibold;
+        }
+
+        /* Tables */
+        table {
+            @apply w-full;
+        }
+
+        /* Blockquotes */
+        blockquote {
+            @apply border-l-primary/40;
+        }
+
+        /* Lists */
+        ul,
+        ol {
+            @apply text-foreground;
+        }
+
+        /* Strong */
+        strong {
+            @apply font-semibold text-foreground;
+        }
+
+        /* Em */
+        em {
+            @apply italic;
+        }
+    }
+
+    .prose-sm {
+        @apply text-sm leading-relaxed;
+    }
+
+    .dark .prose {
+        @apply text-foreground;
+
+        /* Adjust code block colors for dark mode */
+        .hljs {
+            @apply bg-muted/50 border-border/40;
+        }
     }
 }
