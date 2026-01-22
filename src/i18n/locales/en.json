@@ -89,7 +89,31 @@
     "appName": "App Name",
     "version": "Version",
     "documentation": "Documentation",
-    "reportIssue": "Report Issue"
+    "reportIssue": "Report Issue",
+    "email": {
+      "title": "Email Sync",
+      "description": "Auto-sync job applications via Gmail",
+      "notInstalled": "Gmail CLI (gog) not installed",
+      "installGuide": "Please install the gog CLI tool to enable email sync: https://github.com/pdfinn/gog",
+      "setupRequired": "Gmail Setup Required",
+      "guide": {
+        "step1": "1. Open Terminal",
+        "step2": "2. Run this command:",
+        "step3": "3. Follow browser prompt to authorize",
+        "copyCommand": "Copy Command",
+        "checkStatus": "Check Status"
+      },
+      "accounts": {
+        "title": "Connected Accounts",
+        "lastSync": "Last sync: {{time}}",
+        "noAccounts": "No accounts connected",
+        "addAccount": "Add Account"
+      },
+      "status": {
+        "syncing": "Syncing emails...",
+        "error": "Sync error: {{message}}"
+      }
+    }
   },
   "workspace": {
     "title": "Eve Workspace",

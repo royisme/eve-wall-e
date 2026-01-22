@@ -148,6 +148,18 @@ export interface TailoredResume {
   createdAt: string;
 }
 
+export interface EmailStatusResponse {
+  installed?: boolean; // Optional because legacy/docs didn't specify it, but service returns it
+  version?: string | null;
+  accounts: Array<{
+    email: string;
+    authorized: boolean;
+    lastSyncAt?: string;
+  }>;
+  syncing: boolean;
+  error?: string;
+}
+
 // ============================================
 // Analytics Types
 // ============================================
@@ -563,7 +575,7 @@ export async function analyzeJob(
 export async function getJobAnalysis(
   jobId: number,
   resumeId: number,
-): Promise<{ analysis: JobAnalysis | null }> {
+  ): Promise<{ analysis: JobAnalysis | null }> {
   const baseUrl = await getBaseUrl();
   const query = new URLSearchParams();
   query.set("resumeId", String(resumeId));
@@ -668,6 +680,16 @@ export async function createJob(data: CreateJobRequest): Promise<{ job: Job }> {
   return res.json();
 }
 
+// ============================================
+// Email API
+// ============================================
+
+export async function getEmailStatus(): Promise<EmailStatusResponse> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchWithAuth(buildUrl(baseUrl, endpoints.email.status));
+  return res.json();
+}
+
 export const eveApi = {
   // Chat & Health
   chat,
@@ -701,6 +723,8 @@ export const eveApi = {
   // Analytics
   getFunnelMetrics,
   getSkillInsights,
+  // Email
+  getEmailStatus,
 };
 
 export default eveApi;

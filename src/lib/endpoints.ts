@@ -75,6 +75,13 @@ export const endpoints = {
       skills: "/jobs/analytics/skills",
     },
   },
+  
+  // ============================================
+  // Email
+  // ============================================
+  email: {
+    status: "/email/status",
+  },
 } as const;
 
 /**
