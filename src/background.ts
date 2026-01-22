@@ -14,16 +14,23 @@ interface SaveJobResponse {
   jobId?: number;
 }
 
-type Message = SaveJobMessage | { type: "GET_AUTH_TOKEN" } | { type: "PING" };
+type Message =
+  | SaveJobMessage
+  | { type: "GET_AUTH_TOKEN" }
+  | { type: "PING" }
+  | { type: "OPEN_SIDE_PANEL" };
 
 const STORAGE_KEY_SERVER_URL = "serverUrl";
 const DEFAULT_SERVER_URL = "http://localhost:3033";
 
 async function getServerUrl(): Promise<string> {
   return new Promise((resolve) => {
-    chrome.storage.local.get([STORAGE_KEY_SERVER_URL], (result: { [key: string]: string | undefined }) => {
-      resolve(result[STORAGE_KEY_SERVER_URL] || DEFAULT_SERVER_URL);
-    });
+    chrome.storage.local.get(
+      [STORAGE_KEY_SERVER_URL],
+      (result: { [key: string]: string | undefined }) => {
+        resolve(result[STORAGE_KEY_SERVER_URL] || DEFAULT_SERVER_URL);
+      },
+    );
   });
 }
 
@@ -31,7 +38,9 @@ function getAuthToken(): string {
   return chrome.runtime.id;
 }
 
-async function saveJobToEve(payload: SaveJobMessage["payload"]): Promise<SaveJobResponse> {
+async function saveJobToEve(
+  payload: SaveJobMessage["payload"],
+): Promise<SaveJobResponse> {
   try {
     const serverUrl = await getServerUrl();
     const token = getAuthToken();
@@ -51,7 +60,10 @@ async function saveJobToEve(payload: SaveJobMessage["payload"]): Promise<SaveJob
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `Eve API error: ${response.status} - ${errorText}` };
+      return {
+        success: false,
+        error: `Eve API error: ${response.status} - ${errorText}`,
+      };
     }
 
     const result = await response.json();
@@ -117,56 +129,86 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-function extractJobFromPage(): { content: string; title?: string; company?: string } | null {
+function extractJobFromPage(): {
+  content: string;
+  title?: string;
+  company?: string;
+} | null {
   const url = window.location.href;
   let content = "";
   let title: string | undefined;
   let company: string | undefined;
 
   if (url.includes("linkedin.com")) {
-    const titleEl = document.querySelector(".job-details-jobs-unified-top-card__job-title");
-    const companyEl = document.querySelector(".job-details-jobs-unified-top-card__company-name");
+    const titleEl = document.querySelector(
+      ".job-details-jobs-unified-top-card__job-title",
+    );
+    const companyEl = document.querySelector(
+      ".job-details-jobs-unified-top-card__company-name",
+    );
     const descEl = document.querySelector(".jobs-description__content");
     title = titleEl?.textContent?.trim();
     company = companyEl?.textContent?.trim();
-    content = descEl?.textContent?.trim() || document.body.innerText.substring(0, 10000);
+    content =
+      descEl?.textContent?.trim() ||
+      document.body.innerText.substring(0, 10000);
   } else if (url.includes("indeed.com")) {
-    const titleEl = document.querySelector("[data-testid='jobsearch-JobInfoHeader-title']") || 
-                    document.querySelector(".jobsearch-JobInfoHeader-title");
-    const companyEl = document.querySelector("[data-testid='inlineHeader-companyName']") ||
-                      document.querySelector(".jobsearch-InlineCompanyRating-companyHeader");
+    const titleEl =
+      document.querySelector("[data-testid='jobsearch-JobInfoHeader-title']") ||
+      document.querySelector(".jobsearch-JobInfoHeader-title");
+    const companyEl =
+      document.querySelector("[data-testid='inlineHeader-companyName']") ||
+      document.querySelector(".jobsearch-InlineCompanyRating-companyHeader");
     const descEl = document.querySelector("#jobDescriptionText");
     title = titleEl?.textContent?.trim();
     company = companyEl?.textContent?.trim();
-    content = descEl?.textContent?.trim() || document.body.innerText.substring(0, 10000);
+    content =
+      descEl?.textContent?.trim() ||
+      document.body.innerText.substring(0, 10000);
   } else if (url.includes("greenhouse.io")) {
-    const titleEl = document.querySelector(".app-title") || document.querySelector("h1");
+    const titleEl =
+      document.querySelector(".app-title") || document.querySelector("h1");
     const companyEl = document.querySelector(".company-name");
-    const descEl = document.querySelector("#content") || document.querySelector(".content");
+    const descEl =
+      document.querySelector("#content") || document.querySelector(".content");
     title = titleEl?.textContent?.trim();
     company = companyEl?.textContent?.trim();
-    content = descEl?.textContent?.trim() || document.body.innerText.substring(0, 10000);
+    content =
+      descEl?.textContent?.trim() ||
+      document.body.innerText.substring(0, 10000);
   } else if (url.includes("lever.co")) {
     const titleEl = document.querySelector(".posting-headline h2");
-    const companyEl = document.querySelector(".posting-categories .sort-by-team");
+    const companyEl = document.querySelector(
+      ".posting-categories .sort-by-team",
+    );
     const descEl = document.querySelector(".posting-content");
     title = titleEl?.textContent?.trim();
     company = companyEl?.textContent?.trim();
-    content = descEl?.textContent?.trim() || document.body.innerText.substring(0, 10000);
+    content =
+      descEl?.textContent?.trim() ||
+      document.body.innerText.substring(0, 10000);
   } else if (url.includes("glassdoor.com")) {
-    const titleEl = document.querySelector("[data-test='job-title']") || document.querySelector("h1");
+    const titleEl =
+      document.querySelector("[data-test='job-title']") ||
+      document.querySelector("h1");
     const companyEl = document.querySelector("[data-test='employer-name']");
-    const descEl = document.querySelector(".jobDescriptionContent") || document.querySelector("#JobDescriptionContainer");
+    const descEl =
+      document.querySelector(".jobDescriptionContent") ||
+      document.querySelector("#JobDescriptionContainer");
     title = titleEl?.textContent?.trim();
     company = companyEl?.textContent?.trim();
-    content = descEl?.textContent?.trim() || document.body.innerText.substring(0, 10000);
+    content =
+      descEl?.textContent?.trim() ||
+      document.body.innerText.substring(0, 10000);
   } else if (url.includes("wellfound.com")) {
     const titleEl = document.querySelector("h1");
     const companyEl = document.querySelector("[data-test='StartupName']");
     const descEl = document.querySelector("[data-test='JobDescription']");
     title = titleEl?.textContent?.trim();
     company = companyEl?.textContent?.trim();
-    content = descEl?.textContent?.trim() || document.body.innerText.substring(0, 10000);
+    content =
+      descEl?.textContent?.trim() ||
+      document.body.innerText.substring(0, 10000);
   } else {
     title = document.title;
     content = document.body.innerText.substring(0, 10000);
@@ -177,29 +219,46 @@ function extractJobFromPage(): { content: string; title?: string; company?: stri
 
 function showNotification(message: string, type: "success" | "error") {
   console.log(`[Wall-E] ${type.toUpperCase()}: ${message}`);
-  chrome.runtime.sendMessage({
-    type: "NOTIFICATION",
-    payload: { message, notificationType: type },
-  }).catch(() => {});
+  chrome.runtime
+    .sendMessage({
+      type: "NOTIFICATION",
+      payload: { message, notificationType: type },
+    })
+    .catch(() => {});
 }
 
-chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
-  if (message.type === "SAVE_JOB") {
-    saveJobToEve(message.payload).then(sendResponse);
-    return true;
-  }
+chrome.runtime.onMessage.addListener(
+  (message: Message, sender, sendResponse) => {
+    if (message.type === "SAVE_JOB") {
+      saveJobToEve(message.payload).then(sendResponse);
+      return true;
+    }
 
-  if (message.type === "GET_AUTH_TOKEN") {
-    sendResponse({ token: getAuthToken() });
-    return true;
-  }
+    if (message.type === "GET_AUTH_TOKEN") {
+      sendResponse({ token: getAuthToken() });
+      return true;
+    }
 
-  if (message.type === "PING") {
-    sendResponse({ pong: true });
-    return true;
-  }
+    if (message.type === "PING") {
+      sendResponse({ pong: true });
+      return true;
+    }
 
-  return false;
-});
+    if (message.type === "OPEN_SIDE_PANEL") {
+      if (sender.tab?.windowId) {
+        chrome.sidePanel.open({ windowId: sender.tab.windowId }).catch(() => {
+          chrome.sidePanel.setOptions({
+            path: "index.html",
+            enabled: true,
+          });
+        });
+      }
+      sendResponse({ success: true });
+      return true;
+    }
+
+    return false;
+  },
+);
 
 console.log("[Wall-E] Background service worker initialized");

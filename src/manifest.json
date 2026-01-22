@@ -3,7 +3,13 @@
   "name": "Wall-E",
   "version": "0.1.0",
   "description": "Wall-E Copilot side panel extension.",
-  "permissions": ["sidePanel", "storage", "activeTab", "scripting", "contextMenus"],
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
+  ],
   "host_permissions": [
     "http://localhost:3033/*",
     "https://*.linkedin.com/*",
@@ -30,7 +36,7 @@
         "https://*.lever.co/*",
         "https://*.wellfound.com/jobs/*"
       ],
-      "js": ["src/content/job-detector.ts"],
+      "js": ["src/content/floating-button.ts", "src/content/job-detector.ts"],
       "run_at": "document_idle"
     }
   ]

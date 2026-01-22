@@ -2,24 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEveChat, type Message } from "@/hooks/useEveChat";
+import { useJobDetection } from "@/hooks/useJobDetection";
 import { JobContextStrip } from "@/components/JobContextStrip";
 import { ToolCallCard } from "@/components/ToolCallCard";
 import { Send, Loader2, Sparkles, Bot, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-interface DetectedJob {
-  title: string;
-  company: string;
-  url?: string;
-}
-
 export function Chat() {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [detectedJob, setDetectedJob] = useState<DetectedJob | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { mutate, isPending, error } = useEveChat();
+  const { detectedJob, isSaving, saveCurrentPage, dismissJob } =
+    useJobDetection();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,8 +55,9 @@ export function Chat() {
     );
   };
 
-  const handleAnalyzeJob = () => {
+  const handleAnalyzeJob = async () => {
     if (!detectedJob) return;
+    await saveCurrentPage();
     handleSend(
       t("chat.prompt.analyzeJob", {
         title: detectedJob.title,
@@ -69,14 +66,9 @@ export function Chat() {
     );
   };
 
-  const handleSaveJob = () => {
+  const handleSaveJob = async () => {
     if (!detectedJob) return;
-    handleSend(
-      t("chat.prompt.saveJob", {
-        title: detectedJob.title,
-        company: detectedJob.company,
-      }),
-    );
+    await saveCurrentPage();
   };
 
   const isEmpty = messages.length === 0;
@@ -89,8 +81,8 @@ export function Chat() {
         job={detectedJob}
         onAnalyze={handleAnalyzeJob}
         onSave={handleSaveJob}
-        onDismiss={() => setDetectedJob(null)}
-        isAnalyzing={isPending}
+        onDismiss={dismissJob}
+        isAnalyzing={isSaving || isPending}
       />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
