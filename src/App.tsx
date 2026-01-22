@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider, useQueryErrorResetBoundary } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQueryErrorResetBoundary,
+} from "@tanstack/react-query";
 import { Settings } from "@/components/Settings";
 import { Header } from "@/components/Header";
 import { TabNavigation, type TabId } from "@/components/TabNavigation";
@@ -21,6 +25,7 @@ import { syncService } from "@/lib/sync/syncService";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { useAuth } from "@/hooks/useAuth";
 import { useJobDetection } from "@/hooks/useJobDetection";
+import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 
 const queryClient = new QueryClient({
@@ -41,7 +46,8 @@ function SidePanel() {
   const { t } = useTranslation();
   const { status } = useConnectionStatus();
   const { status: authStatus, clearAndRestart, retry } = useAuth();
-  const { detectedJob, isSaving, saveCurrentPage, dismissJob } = useJobDetection();
+  const { detectedJob, isSaving, saveCurrentPage, dismissJob } =
+    useJobDetection();
   const [activeTab, setActiveTab] = useState<TabId>("chat");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -55,7 +61,16 @@ function SidePanel() {
 
   useEffect(() => {
     setToastCallback((type: "success" | "error" | "info", message: string) => {
-      window.dispatchEvent(new CustomEvent("wall-e-toast", { detail: { type, message, id: Date.now().toString(), timestamp: Date.now() } }));
+      window.dispatchEvent(
+        new CustomEvent("wall-e-toast", {
+          detail: {
+            type,
+            message,
+            id: Date.now().toString(),
+            timestamp: Date.now(),
+          },
+        }),
+      );
     });
   }, []);
 
@@ -70,10 +85,12 @@ function SidePanel() {
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 animate-pulse">
-           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20 text-primary">
-             <Loader2 className="h-5 w-5 animate-spin" />
-           </div>
-           <span className="text-sm font-medium text-muted-foreground tracking-wide">{t('common.loading')}</span>
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20 text-primary">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+          <span className="text-sm font-medium text-muted-foreground tracking-wide">
+            {t("common.loading")}
+          </span>
         </div>
       </div>
     );
@@ -183,6 +200,9 @@ function WorkspaceWithErrorBoundary() {
 }
 
 export function App() {
+  // Initialize theme
+  useTheme();
+
   useEffect(() => {
     console.log("[App] Starting SyncService");
     syncService.startAutoSync();

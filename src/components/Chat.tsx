@@ -29,14 +29,6 @@ export function Chat() {
     scrollToBottom();
   }, [messages, isPending]);
 
-  useEffect(() => {
-    setDetectedJob({
-      title: "Senior Software Engineer",
-      company: "Google",
-      url: "https://careers.google.com/jobs/123",
-    });
-  }, []);
-
   const handleSend = (customPrompt?: string) => {
     const promptText = customPrompt || input;
     if (!promptText.trim() || isPending) return;
@@ -63,23 +55,33 @@ export function Chat() {
           };
           setMessages((prev) => [...prev, assistantMessage]);
         },
-      }
+      },
     );
   };
 
   const handleAnalyzeJob = () => {
     if (!detectedJob) return;
-    handleSend(t('chat.prompt.analyzeJob', { title: detectedJob.title, company: detectedJob.company }));
+    handleSend(
+      t("chat.prompt.analyzeJob", {
+        title: detectedJob.title,
+        company: detectedJob.company,
+      }),
+    );
   };
 
   const handleSaveJob = () => {
     if (!detectedJob) return;
-    handleSend(t('chat.prompt.saveJob', { title: detectedJob.title, company: detectedJob.company }));
+    handleSend(
+      t("chat.prompt.saveJob", {
+        title: detectedJob.title,
+        company: detectedJob.company,
+      }),
+    );
   };
 
   const isEmpty = messages.length === 0;
-  
-  const suggestionKeys = ['findJobs', 'analyzeJob', 'helpResume'] as const;
+
+  const suggestionKeys = ["findJobs", "analyzeJob", "helpResume"] as const;
 
   return (
     <div className="flex flex-col h-full bg-background relative">
@@ -90,16 +92,18 @@ export function Chat() {
         onDismiss={() => setDetectedJob(null)}
         isAnalyzing={isPending}
       />
-      
+
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {isEmpty ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-6 animate-in fade-in duration-500">
             <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-primary/20">
               <Sparkles className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="font-semibold text-xl mb-2 tracking-tight">{t('chat.welcome.title')}</h2>
+            <h2 className="font-semibold text-xl mb-2 tracking-tight">
+              {t("chat.welcome.title")}
+            </h2>
             <p className="text-sm text-muted-foreground mb-8 max-w-[240px] leading-relaxed">
-              {t('chat.welcome.subtitle')}
+              {t("chat.welcome.subtitle")}
             </p>
             <div className="flex flex-col gap-2.5 w-full max-w-[260px]">
               {suggestionKeys.map((key) => (
@@ -119,11 +123,22 @@ export function Chat() {
         ) : (
           <>
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} animate-in slide-in-from-bottom-2 duration-300`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
-                  msg.role === "user" ? "bg-accent text-accent-foreground" : "bg-primary/20 text-primary ring-1 ring-primary/20"
-                }`}>
-                  {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+              <div
+                key={msg.id}
+                className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} animate-in slide-in-from-bottom-2 duration-300`}
+              >
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
+                    msg.role === "user"
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-primary/20 text-primary ring-1 ring-primary/20"
+                  }`}
+                >
+                  {msg.role === "user" ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4" />
+                  )}
                 </div>
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
@@ -132,7 +147,9 @@ export function Chat() {
                       : "bg-card border border-border text-foreground rounded-tl-sm"
                   }`}
                 >
-                  <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  <p className="leading-relaxed whitespace-pre-wrap">
+                    {msg.content}
+                  </p>
                 </div>
               </div>
             ))}
@@ -140,26 +157,33 @@ export function Chat() {
               <div className="space-y-4 animate-in fade-in duration-300">
                 <ToolCallCard
                   tools={[
-                    { id: "1", name: "jobs_search", status: "success", result: "Found 12 jobs" },
+                    {
+                      id: "1",
+                      name: "jobs_search",
+                      status: "success",
+                      result: "Found 12 jobs",
+                    },
                     { id: "2", name: "jobs_analyze", status: "running" },
                   ]}
                 />
-                 <div className="flex gap-3">
-                   <div className="h-8 w-8 rounded-full bg-primary/20 text-primary ring-1 ring-primary/20 flex items-center justify-center shrink-0">
-                     <Bot className="h-4 w-4" />
-                   </div>
-                   <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-10">
-                     <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                     <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                     <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></span>
-                   </div>
-                 </div>
+                <div className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/20 text-primary ring-1 ring-primary/20 flex items-center justify-center shrink-0">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-10">
+                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></span>
+                  </div>
+                </div>
               </div>
             )}
             {error && (
               <div className="text-xs text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20 animate-in fade-in flex gap-2 items-center">
-                 <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-                 <span>{t('common.error')}: {error.message}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                <span>
+                  {t("common.error")}: {error.message}
+                </span>
               </div>
             )}
           </>
@@ -173,13 +197,13 @@ export function Chat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={t('chat.placeholder')}
+            placeholder={t("chat.placeholder")}
             disabled={isPending}
             className="border-0 focus-visible:ring-0 shadow-none bg-transparent h-10 px-3"
           />
-          <Button 
-            onClick={() => handleSend()} 
-            disabled={isPending || !input.trim()} 
+          <Button
+            onClick={() => handleSend()}
+            disabled={isPending || !input.trim()}
             size="icon"
             className="h-9 w-9 shrink-0 rounded-xl transition-all hover:scale-105 active:scale-95"
           >

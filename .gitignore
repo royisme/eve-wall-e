@@ -13,3 +13,5 @@ drizzle
 .crush
 .cursor
 **/.tmp
+.claude
+.works

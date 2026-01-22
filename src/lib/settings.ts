@@ -33,7 +33,7 @@ export async function getSettings(): Promise<Settings> {
             theme: result.theme || DEFAULT_SETTINGS.theme,
             lastSyncTime: result.lastSyncTime,
           });
-        }
+        },
       );
     });
   }
@@ -70,14 +70,14 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
 // Update a single setting
 export async function updateSetting<K extends keyof Settings>(
   key: K,
-  value: Settings[K]
+  value: Settings[K],
 ): Promise<void> {
   await saveSettings({ [key]: value });
 }
 
 // Get a single setting
 export async function getSetting<K extends keyof Settings>(
-  key: K
+  key: K,
 ): Promise<Settings[K]> {
   const settings = await getSettings();
   return settings[key];
@@ -95,7 +95,11 @@ export async function migrateSettings(): Promise<void> {
     return new Promise((resolve) => {
       chrome.storage.local.get(null, async (result) => {
         // If we have old format keys that need migration
-        if (result.port && !result.serverPort) {
+        if (
+          result.port &&
+          !result.serverPort &&
+          typeof result.port === "string"
+        ) {
           await saveSettings({ serverPort: result.port });
           chrome.storage.local.remove(["port"]);
         }
